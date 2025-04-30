@@ -64,7 +64,6 @@ class EyeRenderer:
     
     def draw_eye_whites(self, painter, offset_x, offset_y, left_blink, right_blink, emotion_data):
         """Draw eye whites with realistic blinking"""
-        # Get moisture for subtle effects
         moisture = getattr(self.renderer.controller, 'eye_moisture', 1.0)
         
         # Left eye white
@@ -77,22 +76,19 @@ class EyeRenderer:
         self.renderer.curveto_r(left_eye_path, 4, -1, 26, -2, 30, 0)
         self.renderer.smooth_r(left_eye_path, 10, 3, 12, 7)
         
-        # More natural eyelid movement - upper lid moves more than lower
-        # FIXED: Reduced the multiplier to prevent overflow
-        upper_lid_factor = left_blink * 0.9  # Reduced from 1.2
+        # Reduce the blink effect to prevent the white oval issue
+        upper_lid_factor = left_blink * 0.85
         lower_lid_factor = left_blink * 0.6
         
+        # Draw the bottom part of the eye with blink adjustment
         painter.setPen(QPen(QColor("#D1D1D1"), 1))
         self.renderer.smooth_r(left_eye_path, 2, 27 - 27*lower_lid_factor, -1, 30 - 30*lower_lid_factor)
-        self.renderer.smooth_r(left_eye_path, -39, 5 - 7*upper_lid_factor, -44, 1 - 1*upper_lid_factor)
+        self.renderer.smooth_r(left_eye_path, -39, 5 - 5*upper_lid_factor, -44, 1 - 1*upper_lid_factor)
         self.renderer.smooth(left_eye_path, 206 + offset_x, 212 + offset_y, 206 + offset_x, 212 + offset_y)
-        
-        # FIXED: Clip the path to prevent overflow
-        left_eye_path.setFillRule(Qt.FillRule.WindingFill)
         
         painter.drawPath(left_eye_path)
         
-        # Right eye white - slightly asymmetric for realism
+        # Right eye white
         right_top_path = QPainterPath()
         self.renderer.moveto(right_top_path, 384 + offset_x, 204 + offset_y)
         self.renderer.curveto_r(right_top_path, -3, -1, -18, -1, -28, 1)
@@ -105,12 +101,11 @@ class EyeRenderer:
         right_bottom_path = QPainterPath()
         self.renderer.moveto(right_bottom_path, 346 + offset_x, 214 + offset_y)
         
-        # FIXED: Reduced the multiplier here too
-        upper_lid_factor = right_blink * 0.9  # Reduced from 1.2
+        upper_lid_factor = right_blink * 0.85
         lower_lid_factor = right_blink * 0.6
         
         self.renderer.smooth_r(right_bottom_path, 3, 18 - 18*lower_lid_factor, 6, 23 - 23*lower_lid_factor)
-        self.renderer.smooth_r(right_bottom_path, 38, 6 - 8*upper_lid_factor, 40, 4 - 4*upper_lid_factor)
+        self.renderer.smooth_r(right_bottom_path, 38, 6 - 6*upper_lid_factor, 40, 4 - 4*upper_lid_factor)
         self.renderer.smooth_r(right_bottom_path, 10, -9, 13, -22)
         
         painter.setPen(QPen(QColor("#D1D1D1"), 1))
@@ -126,27 +121,9 @@ class EyeRenderer:
         self.renderer.smooth_r(full_eye_path, 10, -9, 13, -22)
         full_eye_path.closeSubpath()
         
-        # FIXED: Set proper fill rule
-        full_eye_path.setFillRule(Qt.FillRule.WindingFill)
-        
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor("#D1D1D1")))
         painter.drawPath(full_eye_path)
-        
-        # Add subtle eyelid creases during blink
-        if left_blink > 0.1:
-            painter.setPen(QPen(QColor("#CCCCCC"), 0.5))
-            crease_path = QPainterPath()
-            self.renderer.moveto(crease_path, 210 + offset_x, 205 + offset_y - 5*left_blink)  # Reduced from 8
-            self.renderer.curveto_r(crease_path, 15, 0, 35, 0, 50, 2)
-            painter.drawPath(crease_path)
-        
-        if right_blink > 0.1:
-            painter.setPen(QPen(QColor("#CCCCCC"), 0.5))
-            crease_path = QPainterPath()
-            self.renderer.moveto(crease_path, 350 + offset_x, 199 + offset_y - 5*right_blink)  # Reduced from 8
-            self.renderer.curveto_r(crease_path, -15, 0, -35, 0, -50, 2)
-            painter.drawPath(crease_path)
     
     def draw_irises(self, painter, offset_x, offset_y, left_blink, right_blink, emotion_data, winking):
         """Draw irises matching original style with natural movement"""
