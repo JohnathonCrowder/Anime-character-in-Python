@@ -7,6 +7,9 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF
 from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPainterPath, QFont
 from emotions import get_emotion_data, get_available_emotions, EYEBROW_SHAPES, MOUTH_SHAPES
+from eye_drawing import EyeRenderer
+
+
 
 # Constants
 WIDTH = 600
@@ -27,6 +30,7 @@ class AnimationController:
         self.head_offset_y = 0
         self.blink_factor = 0
         self.talk_factor = 0
+        self.eye_renderer = EyeRenderer(self)
         
     def update(self):
         self.frame += 1
@@ -79,6 +83,7 @@ class QtCharacterRenderer:
         self.last_ctrl2 = None  # For smooth curves
         self.Xh = 0  # For Smooth curves
         self.Yh = 0  # For Smooth curves
+        self.eye_renderer = EyeRenderer(self)
         
     def convert_x(self, x):
         """Convert x from turtle coords to Qt coords"""
@@ -506,172 +511,10 @@ class QtCharacterRenderer:
         painter.drawPath(right_path)
         
     def draw_eyes(self, painter, offset_x=0, offset_y=0):
-        """Draw the character's eyes with blink animation"""
+        """Draw the character's eyes using the EyeRenderer"""
         emotion_data = get_emotion_data(self.controller.emotion)
-        blink_factor = self.controller.blink_factor
-        
-        # Adjust blink factor for sleepy emotions
-        if self.controller.emotion == "sleepy" and blink_factor < emotion_data.blink_adjust:
-            blink_factor = emotion_data.blink_adjust
-        
-        # Special case for winking
-        winking = self.controller.emotion == "winking"
-        
-        # Left eye blink
-        left_blink = blink_factor
-        
-        painter.setPen(QPen(QColor("black"), 2))
-        painter.setBrush(QBrush(QColor("#D1D1D1")))
-        left_eye_path = QPainterPath()
-        self.moveto(left_eye_path, 206 + offset_x, 212 + offset_y)
-        self.Xh = self.Yh = 0
-        
-        # Eye shape with blink factor
-        self.relative_lineto(left_eye_path, 15 + emotion_data.eye_width_adjust, -7)
-        self.curveto_r(left_eye_path, 4, -1, 26 + emotion_data.eye_width_adjust, -2, 30 + emotion_data.eye_width_adjust, 0)
-        self.smooth_r(left_eye_path, 10, 3, 12, 7)
-        
-        # Apply blink animation
-        painter.setPen(QPen(QColor("#D1D1D1"), 1))
-        self.smooth_r(left_eye_path, 2, 27 - 25*left_blink + emotion_data.eye_height_adjust, 
-                     -1, 30 - 28*left_blink + emotion_data.eye_height_adjust)
-        self.smooth_r(left_eye_path, -39 - emotion_data.eye_width_adjust, 5, 
-                     -44 - emotion_data.eye_width_adjust, 1)
-        
-        left_eye_path.closeSubpath()
-        painter.drawPath(left_eye_path)
-        
-        # Right eye (wink if needed)
-        right_blink = 1.0 if winking else blink_factor
-        
-        right_eye_path = QPainterPath()
-        self.moveto(right_eye_path, 384 + offset_x, 204 + offset_y)
-        self.Xh = self.Yh = 0
-        
-        painter.setPen(QPen(QColor("black"), 2))
-        self.curveto_r(right_eye_path, -3, -1, -18 - emotion_data.eye_width_adjust, -1, 
-                      -28 - emotion_data.eye_width_adjust, 1)
-        self.smooth_r(right_eye_path, -9, 6, -10, 9)
-        
-        painter.setPen(QPen(QColor("#D1D1D1"), 1))
-        self.smooth_r(right_eye_path, 3, 18 - 16*right_blink + emotion_data.eye_height_adjust, 
-                     6, 23 - 21*right_blink + emotion_data.eye_height_adjust)
-        self.smooth_r(right_eye_path, 38 + emotion_data.eye_width_adjust, 6, 
-                     40 + emotion_data.eye_width_adjust, 4)
-        self.smooth_r(right_eye_path, 10, -9, 13, -22)
-        
-        painter.setPen(QPen(QColor("black"), 2))
-        self.lineto(right_eye_path, 384 + offset_x, 204 + offset_y)
-        painter.drawPath(right_eye_path)
-        
-        # Draw irises if eyes are open
-        if blink_factor < 0.8:
-            painter.setPen(QPen(QColor("#0C1631"), 1))
-            painter.setBrush(QBrush(QColor("#0C1631")))
-            
-            # Left iris
-            if not (winking and left_blink >= 0.8):
-                left_iris_path = QPainterPath()
-                self.moveto(left_iris_path, 216 + offset_x + emotion_data.iris_offset_x, 
-                           206 + offset_y + emotion_data.iris_offset_y)
-                self.Xh = self.Yh = 0
-                
-                self.curveto_r(left_iris_path, -1, 5, 0, 26 - 24*left_blink, 7, 35 - 33*left_blink)
-                self.smooth_r(left_iris_path, 30, 2, 33, 0)
-                self.smooth_r(left_iris_path, 5, -31 + 29*left_blink, 2, -34 + 32*left_blink)
-                self.curveto(left_iris_path, 219 + offset_x + emotion_data.iris_offset_x, 
-                            203 + offset_y + emotion_data.iris_offset_y,
-                            216 + offset_x + emotion_data.iris_offset_x, 
-                            206 + offset_y + emotion_data.iris_offset_y,
-                            216 + offset_x + emotion_data.iris_offset_x, 
-                            206 + offset_y + emotion_data.iris_offset_y)
-                
-                painter.drawPath(left_iris_path)
-            
-            # Right iris
-            if not winking or right_blink < 0.8:
-                right_iris_path = QPainterPath()
-                self.moveto(right_iris_path, 354 + offset_x + emotion_data.iris_offset_x, 
-                           207 + offset_y + emotion_data.iris_offset_y)
-                self.Xh = self.Yh = 0
-                
-                self.curveto_r(right_iris_path, -2, 1, 2, 29 - 27*right_blink, 4, 31 - 29*right_blink)
-                self.smooth_r(right_iris_path, 30, 3, 33, 1)
-                self.smooth_r(right_iris_path, 6, -24 + 22*right_blink, 4, -27 + 25*right_blink)
-                self.relative_lineto(right_iris_path, -11, -8)
-                self.curveto(right_iris_path, 382 + offset_x + emotion_data.iris_offset_x, 
-                            204 + offset_y + emotion_data.iris_offset_y,
-                            357 + offset_x + emotion_data.iris_offset_x, 
-                            206 + offset_y + emotion_data.iris_offset_y,
-                            354 + offset_x + emotion_data.iris_offset_x, 
-                            207 + offset_y + emotion_data.iris_offset_y)
-                
-                painter.drawPath(right_iris_path)
-        
-        # Eye highlights
-        if blink_factor < 0.6 and self.controller.emotion != "sleepy":
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QBrush(QColor("#F5F5F5")))
-            
-            # Left eye highlight
-            if left_blink < 0.6:
-                highlight_path = QPainterPath()
-                self.moveto(highlight_path, 253 + offset_x, 211 + offset_y)
-                self.Xh = self.Yh = 0
-                self.curveto_r(highlight_path, -3, 0, -8, 8 - 7*left_blink, 1, 10 - 9*left_blink)
-                self.curveto(highlight_path, 258 + offset_x, 210 + offset_y, 
-                            253 + offset_x, 211 + offset_y,
-                            253 + offset_x, 211 + offset_y)
-                painter.drawPath(highlight_path)
-            
-            # Right eye highlight
-            if right_blink < 0.6 and not winking:
-                right_highlight_path = QPainterPath()
-                self.moveto(right_highlight_path, 392 + offset_x, 209 + offset_y)
-                self.relative_lineto(right_highlight_path, 4, 3)
-                self.vertical(right_highlight_path, 4 - 3*right_blink)
-                self.relative_lineto(right_highlight_path, -4, 2)
-                self.curveto(right_highlight_path, 386 + offset_x, 214 + offset_y, 
-                            392 + offset_x, 209 + offset_y,
-                            392 + offset_x, 209 + offset_y)
-                painter.drawPath(right_highlight_path)
-        
-        # Eye details (lashes) - only when eyes are open enough
-        if blink_factor < 0.4 and self.controller.emotion not in ["happy", "sleepy"]:
-            painter.setPen(QPen(QColor("black"), 2))
-            
-            # Left eye lashes
-            lash_positions = [
-                [(240.5, 207.5), (227.5, 211.5)],
-                [(245.5, 209.5), (227.5, 214.5)],
-                [(247.5, 211.5), (227.5, 217.5)],
-                [(247.5, 214.5), (229.5, 220.5)],
-                [(247.5, 218.5), (230.5, 223.5)],
-                [(246.5, 222.5), (232.5, 226.5)],
-                [(244.5, 225.5), (234.5, 228.5)]
-            ]
-            
-            for start, end in lash_positions:
-                s_pt = self.convert_point(start[0] + offset_x, start[1] + offset_y)
-                e_pt = self.convert_point(end[0] + offset_x, end[1] + offset_y)
-                painter.drawLine(s_pt, e_pt)
-            
-            # Right eye lashes - only if not winking
-            if not winking and right_blink < 0.4:
-                right_lash_positions = [
-                    [(377.5, 207.5), (367.5, 210.5)],
-                    [(384.5, 207.5), (366.5, 212.5)],
-                    [(385.5, 210.5), (366.5, 215.5)],
-                    [(384.5, 213.5), (366.5, 218.5)],
-                    [(384.5, 215.5), (367.5, 220.5)],
-                    [(384.5, 218.5), (368.5, 223.5)],
-                    [(382.5, 223.5), (370.5, 227.5)]
-                ]
-                
-                for start, end in right_lash_positions:
-                    s_pt = self.convert_point(start[0] + offset_x, start[1] + offset_y)
-                    e_pt = self.convert_point(end[0] + offset_x, end[1] + offset_y)
-                    painter.drawLine(s_pt, e_pt)
+        self.eye_renderer.draw_eyes(painter, offset_x, offset_y, 
+                                self.controller.blink_factor, emotion_data)
     
     def draw_nose(self, painter, offset_x=0, offset_y=0):
         """Draw the character's nose"""
