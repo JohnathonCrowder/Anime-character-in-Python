@@ -483,32 +483,36 @@ class QtCharacterRenderer:
         self.lineto(path5, 349 + offset_x, 180 + offset_y)
         painter.drawPath(path5)
     
-    def draw_eyebrows(self, painter, offset_x=0, offset_y=0):
-        """Draw the character's eyebrows"""
-        emotion_data = get_emotion_data(self.controller.emotion)
-        eyebrow_shape = EYEBROW_SHAPES[emotion_data.eyebrow_type]
-        
+    def draw_eyebrows(self, painter, offset_x, offset_y):
+        """Draw eyebrows with emotion adjustments"""
+        emotion = self.renderer.controller.emotion
         painter.setPen(QPen(QColor("black"), 2))
         
-        # Left eyebrow
-        left_path = QPainterPath()
-        self.moveto(left_path, 210 + offset_x, eyebrow_shape.left_start_y + offset_y)
-        self.Xh = self.Yh = 0
+        # Get emotion data for eyebrow adjustments
+        emotion_data = self.renderer.emotion_data if hasattr(self.renderer, 'emotion_data') else None
+        if not emotion_data:
+            from emotions import get_emotion_data, EYEBROW_SHAPES
+            emotion_data = get_emotion_data(emotion)
+        
+        eyebrow_shape = EYEBROW_SHAPES[emotion_data.eyebrow_type]
+        
+        # Left eyebrow with emotion
+        left_brow_path = QPainterPath()
+        self.renderer.moveto(left_brow_path, 210 + offset_x, eyebrow_shape.left_start_y + offset_y)
         
         for curve_params in eyebrow_shape.left_curve:
-            self.curveto_r(left_path, *curve_params)
+            self.renderer.curveto_r(left_brow_path, *curve_params)
         
-        painter.drawPath(left_path)
+        painter.drawPath(left_brow_path)
         
-        # Right eyebrow
-        right_path = QPainterPath()
-        self.moveto(right_path, 338 + offset_x, eyebrow_shape.right_start_y + offset_y)
-        self.Xh = self.Yh = 0
+        # Right eyebrow with emotion
+        right_brow_path = QPainterPath()
+        self.renderer.moveto(right_brow_path, 338 + offset_x, eyebrow_shape.right_start_y + offset_y)
         
         for curve_params in eyebrow_shape.right_curve:
-            self.curveto_r(right_path, *curve_params)
+            self.renderer.curveto_r(right_brow_path, *curve_params)
         
-        painter.drawPath(right_path)
+        painter.drawPath(right_brow_path)
         
     def draw_eyes(self, painter, offset_x=0, offset_y=0):
         """Draw the character's eyes using the EyeRenderer"""
@@ -709,6 +713,19 @@ class QtCharacterRenderer:
             path.lineTo(start.x() + x, start.y() - y)
         
         painter.drawPath(path)
+
+    def smooth(self, path, x2, y2, x, y):
+        """Add smooth absolute cubic bezier curve"""
+        current = path.currentPosition()
+        
+        # First control point is reflection of previous second control point
+        ctrl1 = QPointF(current.x() + self.Xh, current.y() + self.Yh)  # Note: not inverted
+        ctrl2 = self.convert_point(x2, y2)
+        end = self.convert_point(x, y)
+        
+        path.cubicTo(ctrl1, ctrl2, end)
+        self.Xh = x - x2
+        self.Yh = y - y2
     
     def draw_tears(self, painter, offset_x=0, offset_y=0):
         """Draw tears for crying emotion"""
@@ -759,7 +776,10 @@ class QtCharacterRenderer:
         # Face parts (affected by head movement)
         self.draw_face(painter, offset_x, offset_y)
         self.draw_hair(painter, offset_x, offset_y)
-        self.draw_eyebrows(painter, offset_x, offset_y)
+        
+        # Remove this line to avoid double eyebrows:
+        # self.draw_eyebrows(painter, offset_x, offset_y)
+        
         self.draw_eyes(painter, offset_x, offset_y)
         self.draw_nose(painter, offset_x, offset_y)
         self.draw_mouth(painter, offset_x, offset_y)
