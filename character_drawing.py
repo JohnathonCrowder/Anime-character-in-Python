@@ -1,5 +1,6 @@
 import turtle as pp
 import math
+from emotions import EYEBROW_SHAPES, MOUTH_SHAPES, get_emotion_data
 
 # Constants
 WIDTH = 600
@@ -278,7 +279,7 @@ def draw_collar(offset_y=0):
     Moveto(369, 333 + offset_y)
     curveto_r(2, 4, -6, 10, -15, 14)
 
-    # Collar through bow tie parts
+    #  Collar through bow tie parts
     pp.color("black", "#A2B8D6")
     Moveto(297, 387 + offset_y)
     pp.begin_fill()
@@ -373,59 +374,44 @@ def draw_hair(offset_x=0, offset_y=0):
     pp.end_fill()
 
 def draw_eyebrows(offset_x=0, offset_y=0, emotion="neutral"):
+    emotion_data = get_emotion_data(emotion)
+    eyebrow_shape = EYEBROW_SHAPES[emotion_data.eyebrow_type]
+    
     pp.pensize(2)
     
-    if emotion == "surprised":
-        # Raised eyebrows
-        Moveto(210 + offset_x, 175 + offset_y)
-        curveto_r(5, -6, 63, 7, 63, 12)
-        Moveto(338 + offset_x, 187 + offset_y)
-        curveto_r(0, -5, 18, -8, 18, -8)
-    elif emotion == "sad":
-        # Lowered outer eyebrows
-        Moveto(210 + offset_x, 185 + offset_y)
-        curveto_r(5, 2, 63, 11, 63, 17)
-        Moveto(338 + offset_x, 198 + offset_y)
-        curveto_r(0, 2, 18, -3, 18, -3)
-    elif emotion == "angry":
-        # Angled down in center
-        Moveto(210 + offset_x, 178 + offset_y)
-        curveto_r(5, 5, 63, 4, 63, 14)
-        Moveto(338 + offset_x, 188 + offset_y)
-        curveto_r(0, 2, 18, -1, 18, -1) 
-    else:
-        # Normal eyebrows
-        Moveto(210 + offset_x, 180 + offset_y)
-        curveto_r(5, -4, 63, 9, 63, 14)
-        Moveto(338 + offset_x, 193 + offset_y)
-        curveto_r(0, -3, 18, -6, 18, -6)
+    # Left eyebrow
+    Moveto(210 + offset_x, eyebrow_shape.left_start_y + offset_y)
+    for curve_params in eyebrow_shape.left_curve:
+        curveto_r(*curve_params)
+    
+    # Right eyebrow
+    Moveto(338 + offset_x, eyebrow_shape.right_start_y + offset_y)
+    for curve_params in eyebrow_shape.right_curve:
+        curveto_r(*curve_params)
     
     pp.pensize(1)
 
 def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
+    emotion_data = get_emotion_data(emotion)
+    
+    # Adjust blink factor for sleepy emotion
+    if emotion == "sleepy" and blink_factor < emotion_data.blink_adjust:
+        blink_factor = emotion_data.blink_adjust
+    
     # Eyes base
     pp.color("black", "#D1D1D1")
     pp.pensize(2)
     
-    # Adjust eye shape based on emotion
-    eye_height_adjust = 0
-    if emotion == "happy":
-        eye_height_adjust = 5
-    elif emotion == "surprised":
-        eye_height_adjust = -10
-    elif emotion == "sad":
-        eye_height_adjust = 2
-    
-    # Left eye
+    # Left eye - using emotion adjustments
     Moveto(206 + offset_x, 212 + offset_y)
     pp.begin_fill()
-    lineto(15, -7)
-    curveto_r(4, -1, 26, -2, 30, 0)
+    lineto(15 + emotion_data.eye_width_adjust, -7)
+    curveto_r(4, -1, 26 + emotion_data.eye_width_adjust, -2, 30 + emotion_data.eye_width_adjust, 0)
     smooth_r(10, 3, 12, 7)
     pp.pencolor("#D1D1D1")
     pp.pensize(1)
-    smooth_r(2, 27 - 25*blink_factor + eye_height_adjust, -1, 30 - 28*blink_factor + eye_height_adjust)
-    smooth_r(-39, 5, -44, 1)
+    smooth_r(2, 27 - 25*blink_factor + emotion_data.eye_height_adjust, -1, 30 - 28*blink_factor + emotion_data.eye_height_adjust)
+    smooth_r(-39 - emotion_data.eye_width_adjust, 5, -44 - emotion_data.eye_width_adjust, 1)
     Smooth(206 + offset_x, 212 + offset_y, 206 + offset_x, 212 + offset_y)
     pp.end_fill()
     
@@ -434,12 +420,12 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
     pp.begin_fill()
     pp.pencolor("black")
     pp.pensize(2)
-    curveto_r(-3, -1, -18, -1, -28, 1)
+    curveto_r(-3, -1, -18 - emotion_data.eye_width_adjust, -1, -28 - emotion_data.eye_width_adjust, 1)
     smooth_r(-9, 6, -10, 9)
     pp.pencolor("#D1D1D1")
     pp.pensize(1)
-    smooth_r(3, 18 - 16*blink_factor + eye_height_adjust, 6, 23 - 21*blink_factor + eye_height_adjust)
-    smooth_r(38, 6, 40, 4)
+    smooth_r(3, 18 - 16*blink_factor + emotion_data.eye_height_adjust, 6, 23 - 21*blink_factor + emotion_data.eye_height_adjust)
+    smooth_r(38 + emotion_data.eye_width_adjust, 6, 40 + emotion_data.eye_width_adjust, 4)
     smooth_r(10, -9, 13, -22)
     pp.pencolor("black")
     pp.pensize(2)
@@ -451,40 +437,37 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
         pp.color("#0C1631", "#0C1631")
         pp.pensize(1)
         
-        # Left iris - adjust position based on emotion
-        iris_offset_x = 0
-        iris_offset_y = 0
-        if emotion == "surprised":
-            iris_offset_y = -5
-        elif emotion == "sad":
-            iris_offset_y = 3
-        elif emotion == "happy":
-            iris_offset_y = 2
-        
         # Left iris
-        Moveto(216 + offset_x + iris_offset_x, 206 + offset_y + iris_offset_y)
+        Moveto(216 + offset_x + emotion_data.iris_offset_x, 
+               206 + offset_y + emotion_data.iris_offset_y)
         pp.begin_fill()
         curveto_r(-1, 5, 0, 26 - 24*blink_factor, 7, 35 - 33*blink_factor)
         smooth_r(30, 2, 33, 0)
         smooth_r(5, -31 + 29*blink_factor, 2, -34 + 32*blink_factor)
-        Smooth(219 + offset_x + iris_offset_x, 203 + offset_y + iris_offset_y, 
-               216 + offset_x + iris_offset_x, 206 + offset_y + iris_offset_y)
+        Smooth(219 + offset_x + emotion_data.iris_offset_x, 
+               203 + offset_y + emotion_data.iris_offset_y, 
+               216 + offset_x + emotion_data.iris_offset_x, 
+               206 + offset_y + emotion_data.iris_offset_y)
         pp.end_fill()
         
         # Right iris
-        Moveto(354 + offset_x + iris_offset_x, 207 + offset_y + iris_offset_y)
+        Moveto(354 + offset_x + emotion_data.iris_offset_x, 
+               207 + offset_y + emotion_data.iris_offset_y)
         pp.begin_fill()
         curveto_r(-2, 1, 2, 29 - 27*blink_factor, 4, 31 - 29*blink_factor)
         smooth_r(30, 3, 33, 1)
         smooth_r(6, -24 + 22*blink_factor, 4, -27 + 25*blink_factor)
         lineto(-11, -8)
-        Curveto(382 + offset_x + iris_offset_x, 204 + offset_y + iris_offset_y, 
-                357 + offset_x + iris_offset_x, 206 + offset_y + iris_offset_y, 
-                354 + offset_x + iris_offset_x, 207 + offset_y + iris_offset_y)
+        Curveto(382 + offset_x + emotion_data.iris_offset_x, 
+                204 + offset_y + emotion_data.iris_offset_y, 
+                357 + offset_x + emotion_data.iris_offset_x, 
+                206 + offset_y + emotion_data.iris_offset_y, 
+                354 + offset_x + emotion_data.iris_offset_x, 
+                207 + offset_y + emotion_data.iris_offset_y)
         pp.end_fill()
     
     # Eye highlights
-    if blink_factor < 0.6:
+    if blink_factor < 0.6 and emotion != "sleepy":
         pp.color("#F5F5F5", "#F5F5F5")
         Moveto(253 + offset_x, 211 + offset_y)
         pp.begin_fill()
@@ -501,7 +484,7 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
         pp.end_fill()
     
     # Eye details (only when open)
-    if blink_factor < 0.4 and emotion != "happy":
+    if blink_factor < 0.4 and emotion not in ["happy", "sleepy"]:
         pp.pencolor("black")
         pp.pensize(2)
         Moveto(240.5 + offset_x, 207.5 + offset_y)
@@ -519,147 +502,161 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
         line(384.5 + offset_x, 213.5 + offset_y, 366.5 + offset_x, 218.5 + offset_y)
         line(384.5 + offset_x, 215.5 + offset_y, 367.5 + offset_x, 220.5 + offset_y)
         line(384.5 + offset_x, 218.5 + offset_y, 368.5 + offset_x, 223.5 + offset_y)
-        line(382.5 + offset_x, 223.5 + offset_y, 370.5 + offset_x, 227.5 + offset_y)
+        line(382.5 + offset_x, 223.5 + offset_y, 370.5 + offset_x,  227.5 + offset_y)
 
 def draw_nose_mouth(offset_x=0, offset_y=0, talk_factor=0, emotion="neutral"):
     pp.pencolor("black")
     pp.pensize(1)
+    
     # Nose
     Moveto(309 + offset_x, 270 + offset_y)
     curveto_r(0, 0, 4, 7, 1, 9)
     
-    # Improved mouth animation
+    # Get emotion data and mouth shape
+    emotion_data = get_emotion_data(emotion)
+    mouth_shape = MOUTH_SHAPES[emotion_data.mouth_type]
+    
     if talk_factor > 0:
-        # Advanced talking mouth shapes
-        if emotion == "happy":
-            # Happy talking - wide smile variation
-            Moveto(291 + offset_x, 307 + offset_y)
+        # Talking mouth
+        talking_data = mouth_shape.talking
+        Moveto(talking_data.start_x + offset_x, talking_data.start_y + offset_y)
+        pp.begin_fill()
+        
+        # Draw upper lip
+        for curve_type, *params in talking_data.upper_lip:
+            if curve_type == "curveto_r":
+                adjusted_params = []
+                for i, param in enumerate(params):
+                    if i % 2 == 1:  # Y coordinates
+                        adjusted_params.append(param + (talk_factor * 4))
+                    else:
+                        adjusted_params.append(param)
+                curveto_r(*adjusted_params)
+            elif curve_type == "horizontal":
+                horizontal(*params)
+        
+        # Draw right corner
+        if talking_data.corners and len(talking_data.corners) > 0:
+            corner_type, *corner_params = talking_data.corners[0]
+            if corner_type == "curveto_r":
+                adjusted_params = []
+                for i, param in enumerate(corner_params):
+                    if i % 2 == 1 and i > 2:  # Y coordinates after first pair
+                        adjusted_params.append(param + (talk_factor * 4))
+                    else:
+                        adjusted_params.append(param)
+                curveto_r(*adjusted_params)
+        
+        # Draw lower lip
+        for curve_type, *params in talking_data.lower_lip:
+            if curve_type == "curveto_r":
+                adjusted_params = []
+                for i, param in enumerate(params):
+                    if i % 2 == 1:  # Y coordinates
+                        adjusted_params.append(param + (talk_factor * 6))
+                    else:
+                        adjusted_params.append(param)
+                curveto_r(*adjusted_params)
+            elif curve_type == "horizontal":
+                horizontal(*params)
+        
+        # Draw left corner
+        if talking_data.corners and len(talking_data.corners) > 1:
+            corner_type, *corner_params = talking_data.corners[1]
+            if corner_type == "curveto_r":
+                adjusted_params = []
+                for i, param in enumerate(corner_params):
+                    if i % 2 == 1 and i > 2:  # Y coordinates after first pair
+                        adjusted_params.append(param + (talk_factor * 4))
+                    else:
+                        adjusted_params.append(param)
+                curveto_r(*adjusted_params)
+        
+        pp.end_fill()
+        
+        # Draw inner detail if available and talking enough
+        if talking_data.inner_detail and talk_factor > 0.5:
+            pp.color(talking_data.inner_detail["color"], talking_data.inner_detail["color"])
+            Moveto(298 + offset_x, 310 + offset_y + talk_factor*3)
             pp.begin_fill()
-            
-            # Upper lip with variable curve
-            curveto_r(10, 5 + talk_factor*3, 25, 8 + talk_factor*4, 38, 5 + talk_factor*3)
-            
-            # Right corner
-            curveto_r(2, 0, 3, -1 - talk_factor*2, 3, -3 - talk_factor*3)
-            
-            # Lower lip
-            curveto_r(0, 2 + talk_factor*4, -15, 8 + talk_factor*6, -38, 8 + talk_factor*4)
-            
-            # Left corner
-            curveto_r(-3, -2 - talk_factor*2, -3, -4 - talk_factor*3, 0, -7 - talk_factor*3)
-            
+            for curve_type, *params in talking_data.inner_detail["curves"]:
+                if curve_type == "curveto_r":
+                    curveto_r(*params)
             pp.end_fill()
-            
-        elif emotion == "sad":
-            # Sad talking - downturned mouth
-            Moveto(293 + offset_x, 310 + offset_y)
-            pp.begin_fill()
-            
-            # Upper lip
-            curveto_r(10, -2 + talk_factor*2, 25, -4 + talk_factor*3, 35, -2 + talk_factor*2)
-            
-            # Right corner
-            curveto_r(2, 1, 2, 3 + talk_factor*2, 1, 4 + talk_factor*3)
-            
-            # Lower lip
-            curveto_r(-5, 3 + talk_factor*4, -20, 6 + talk_factor*5, -35, 4 + talk_factor*3)
-            
-            # Left corner
-            curveto_r(-2, -1, -2, -3 - talk_factor*2, 0, -5 - talk_factor*3)
-            
-            pp.end_fill()
-            
-        elif emotion == "surprised":
-            # Surprised talking - O shape that changes
-            center_x = 308 + offset_x
-            center_y = 308 + offset_y
-            
-            # Dynamic O shape
-            Moveto(center_x - 12, center_y)
-            pp.begin_fill()
-            
-            # Top curve
-            curveto_r(6, -6 - talk_factor*4, 18, -6 - talk_factor*4, 24, 0)
-            
-            # Right side
-            curveto_r(4, 4 + talk_factor*2, 4, 8 + talk_factor*4, 0, 12 + talk_factor*6)
-            
-            # Bottom curve
-            curveto_r(-6, 4 + talk_factor*2, -18, 4 + talk_factor*2, -24, 0)
-            
-            # Left side
-            curveto_r(-4, -4 - talk_factor*2, -4, -8 - talk_factor*4, 0, -12 - talk_factor*6)
-            
-            pp.end_fill()
-            
-        else:
-            # Natural talking mouth with better shape variation
-            Moveto(292 + offset_x, 307 + offset_y)
-            pp.begin_fill()
-            
-            # Different mouth shapes based on talk_factor
-            if talk_factor < 0.3:
-                # Small opening
-                curveto_r(8, 1, 20, 2, 32, 1)
-                curveto_r(2, 1, 2, 2, 1, 3)
-                curveto_r(-10, 3, -22, 3, -32, 0)
-                curveto_r(-2, -1, -2, -2, -1, -3)
-                
-            elif talk_factor < 0.6:
-                # Medium opening
-                curveto_r(10, 2, 22, 4, 34, 2)
-                curveto_r(2, 2, 2, 4, 0, 6)
-                curveto_r(-12, 5, -24, 5, -34, 0)
-                curveto_r(-2, -2, -2, -4, 0, -6)
-                
-            else:
-                # Wide opening
-                curveto_r(12, 3, 24, 6, 36, 3)
-                curveto_r(2, 3, 2, 6, -1, 9)
-                curveto_r(-14, 6, -26, 6, -36, 0)
-                curveto_r(-2, -3, -2, -6, 1, -9)
-            
-            pp.end_fill()
-            
-            # Add inner mouth detail for larger openings
-            if talk_factor > 0.5:
-                pp.color("#FF6B6B", "#FF6B6B")  # Tongue color
-                Moveto(298 + offset_x, 310 + offset_y + talk_factor*3)
-                pp.begin_fill()
-                curveto_r(5, 1, 12, 2, 18, 1)
-                curveto_r(3, 2, 2, 4, -1, 5)
-                curveto_r(-8, 1, -16, 0, -18, -2)
-                curveto_r(-2, -2, -1, -4, 1, -5)
-                pp.end_fill()
-                pp.color("black", "black")  # Reset color
+            pp.color("black", "black")  # Reset color
     else:
-        # Closed mouth expressions (unchanged)
-        if emotion == "happy":
-            # Happy smile
-            Moveto(293 + offset_x, 307.5 + offset_y)
+        # Closed mouth
+        closed_data = mouth_shape.closed
+        Moveto(closed_data.start_x + offset_x, closed_data.start_y + offset_y)
+        
+        if len(closed_data.curves) > 1:  # If multiple curves, use fill
             pp.begin_fill()
-            curveto_r(10, 6, 22, 9, 34, 4)
-            curveto_r(2, -1, 1, -3, 0, -3)
-            horizontal(-34)
+        
+        for curve_type, *params in closed_data.curves:
+            if curve_type == "curveto_r":
+                curveto_r(*params)
+            elif curve_type == "horizontal":
+                horizontal(*params)
+        
+        if len(closed_data.curves) > 1:
             pp.end_fill()
-        elif emotion == "sad":
-            # Sad frown
-            Moveto(293 + offset_x, 311.5 + offset_y)
-            pp.begin_fill()
-            curveto_r(10, -4, 22, -6, 34, -3)
-            curveto_r(2, 1, 1, 2, 0, 2)
-            horizontal(-34)
-            pp.end_fill()
-        elif emotion == "surprised":
-            # Surprised small O
-            pp.begin_fill()
-            Moveto(302 + offset_x, 307.5 + offset_y)
-            curveto_r(5, -3, 10, -3, 15, 0)
-            curveto_r(3, 3, 3, 6, 0, 9)
-            curveto_r(-5, 3, -10, 3, -15, 0)
-            curveto_r(-3, -3, -3, -6, 0, -9)
-            pp.end_fill()
-        else:
-            # Normal mouth
-            Moveto(293 + offset_x, 307.5 + offset_y)
-            curveto_r(10, 0, 22, 1, 34, 0)
+
+# Special effects functions
+def draw_blush(offset_x=0, offset_y=0, intensity=1.0):
+    # Draw blush marks for shy emotion
+    pp.color("#FFB7B7", "#FFB7B7")  # Light pink (removed the E0 transparency)
+    # Left cheek
+    Moveto(230 + offset_x, 272 + offset_y)
+    pp.begin_fill()
+    pp.circle(12 * intensity)
+    pp.end_fill()
+    
+    # Right cheek
+    Moveto(365 + offset_x, 272 + offset_y)
+    pp.begin_fill()
+    pp.circle(12 * intensity)
+    pp.end_fill()
+    
+    pp.color("black", "#F3EEEB")  # Reset color
+
+def draw_sweat_drop(offset_x=0, offset_y=0):
+    # Draw sweat drop for nervous/anxious emotions
+    pp.color("#A0D8FF", "#A0D8FF")  # Light blue (removed the E0 transparency)
+    Moveto(390 + offset_x, 180 + offset_y)
+    pp.begin_fill()
+    curveto_r(2, -5, 6, -10, 3, -15)
+    curveto_r(-4, -2, -8, -1, -10, 5)
+    curveto_r(1, 5, 5, 8, 7, 10)
+    pp.end_fill()
+    pp.color("black", "#F3EEEB") 
+
+
+
+def draw_vein_mark(offset_x=0, offset_y=0):
+    # Draw vein mark for angry emotion
+    pp.pencolor("#FF5555")
+    pp.pensize(2)
+    Moveto(185 + offset_x, 180 + offset_y)
+    pp.pendown()
+    for i in range(3):
+        pp.forward(8)
+        pp.right(60)
+        pp.forward(5)
+        pp.left(120)
+    pp.penup()
+    pp.pencolor("black")
+    pp.pensize(1)
+
+def draw_swirl_mark(offset_x=0, offset_y=0):
+    # Draw swirl mark for confused emotion
+    pp.pencolor("#5555FF")
+    pp.pensize(2)
+    Moveto(200 + offset_x, 160 + offset_y)
+    pp.pendown()
+    for i in range(12):
+        pp.circle(5, 30)
+        pp.right(30)
+        pp.forward(i * 0.5)
+    pp.penup()
+    pp.pencolor("black")
+    pp.pensize(1)
