@@ -9,6 +9,8 @@ from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPainterPath, QFont
 from emotions import get_emotion_data, get_available_emotions, EYEBROW_SHAPES, MOUTH_SHAPES
 from eye_drawing import EyeRenderer
 from mouth_drawing import MouthRenderer
+from background_animation import BackgroundRenderer
+
 
 import warnings
 warnings.filterwarnings("ignore", message=".*sipPyTypeDict.*", category=DeprecationWarning)
@@ -150,6 +152,8 @@ class QtCharacterRenderer:
         self.Yh = 0  # For Smooth curves
         self.eye_renderer = EyeRenderer(self)
         self.mouth_renderer = MouthRenderer(self)
+        self.bg_renderer = BackgroundRenderer(self)
+
         
     def convert_x(self, x):
         """Convert x from turtle coords to Qt coords"""
@@ -679,11 +683,21 @@ class QtCharacterRenderer:
         """Main drawing function"""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Clear background
-        painter.fillRect(0, 0, self.width, self.height, QColor("white"))
+        # Draw animated background first
+        self.bg_renderer.update()
+        self.bg_renderer.draw_background(painter)
         
-        # Translate to center the character
-        painter.translate(self.width/2 - 300, self.height/2 - 250)
+        # Calculate the ground level (matching the foreground hills)
+        # The hills start at 0.75 of the height, so that's where the ground is
+        ground_level = self.height * 0.75
+        
+        # The character's bottom (coat bottom) is at y=462 in its coordinate system
+        # To make this align with ground_level, we need to position the origin at:
+        # ground_level - 462
+        character_y_position = ground_level - 462 + 200
+        
+        # Position character to stand on the ground
+        painter.translate(self.width/2 - 300, character_y_position)
         
         # Draw character parts in order
         offset_x = self.controller.head_offset_x
@@ -700,9 +714,6 @@ class QtCharacterRenderer:
         # Face parts (affected by head movement)
         self.draw_face(painter, offset_x, offset_y)
         self.draw_hair(painter, offset_x, offset_y)
-        
-        # IMPORTANT: Remove this line to avoid double eyebrows
-        # self.draw_eyebrows(painter, offset_x, offset_y)
         
         self.draw_eyes(painter, offset_x, offset_y)
         self.draw_nose_and_mouth(painter, offset_x, offset_y)
