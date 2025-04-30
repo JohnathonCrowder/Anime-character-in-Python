@@ -78,13 +78,17 @@ class EyeRenderer:
         self.renderer.smooth_r(left_eye_path, 10, 3, 12, 7)
         
         # More natural eyelid movement - upper lid moves more than lower
-        upper_lid_factor = left_blink * 1.2
+        # FIXED: Reduced the multiplier to prevent overflow
+        upper_lid_factor = left_blink * 0.9  # Reduced from 1.2
         lower_lid_factor = left_blink * 0.6
         
         painter.setPen(QPen(QColor("#D1D1D1"), 1))
         self.renderer.smooth_r(left_eye_path, 2, 27 - 27*lower_lid_factor, -1, 30 - 30*lower_lid_factor)
         self.renderer.smooth_r(left_eye_path, -39, 5 - 7*upper_lid_factor, -44, 1 - 1*upper_lid_factor)
         self.renderer.smooth(left_eye_path, 206 + offset_x, 212 + offset_y, 206 + offset_x, 212 + offset_y)
+        
+        # FIXED: Clip the path to prevent overflow
+        left_eye_path.setFillRule(Qt.FillRule.WindingFill)
         
         painter.drawPath(left_eye_path)
         
@@ -101,7 +105,8 @@ class EyeRenderer:
         right_bottom_path = QPainterPath()
         self.renderer.moveto(right_bottom_path, 346 + offset_x, 214 + offset_y)
         
-        upper_lid_factor = right_blink * 1.2
+        # FIXED: Reduced the multiplier here too
+        upper_lid_factor = right_blink * 0.9  # Reduced from 1.2
         lower_lid_factor = right_blink * 0.6
         
         self.renderer.smooth_r(right_bottom_path, 3, 18 - 18*lower_lid_factor, 6, 23 - 23*lower_lid_factor)
@@ -121,6 +126,9 @@ class EyeRenderer:
         self.renderer.smooth_r(full_eye_path, 10, -9, 13, -22)
         full_eye_path.closeSubpath()
         
+        # FIXED: Set proper fill rule
+        full_eye_path.setFillRule(Qt.FillRule.WindingFill)
+        
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor("#D1D1D1")))
         painter.drawPath(full_eye_path)
@@ -129,14 +137,14 @@ class EyeRenderer:
         if left_blink > 0.1:
             painter.setPen(QPen(QColor("#CCCCCC"), 0.5))
             crease_path = QPainterPath()
-            self.renderer.moveto(crease_path, 210 + offset_x, 205 + offset_y - 8*left_blink)
+            self.renderer.moveto(crease_path, 210 + offset_x, 205 + offset_y - 5*left_blink)  # Reduced from 8
             self.renderer.curveto_r(crease_path, 15, 0, 35, 0, 50, 2)
             painter.drawPath(crease_path)
         
         if right_blink > 0.1:
             painter.setPen(QPen(QColor("#CCCCCC"), 0.5))
             crease_path = QPainterPath()
-            self.renderer.moveto(crease_path, 350 + offset_x, 199 + offset_y - 8*right_blink)
+            self.renderer.moveto(crease_path, 350 + offset_x, 199 + offset_y - 5*right_blink)  # Reduced from 8
             self.renderer.curveto_r(crease_path, -15, 0, -35, 0, -50, 2)
             painter.drawPath(crease_path)
     
