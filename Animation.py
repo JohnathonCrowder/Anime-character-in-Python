@@ -121,12 +121,28 @@ def animate():
                     talk_counter = 60 if talking else 0
                 
                 talk_factor = 0
+                
                 if talking:
                     if talk_counter <= 0:
                         talk_counter = random.randint(20, 40)  # Random talk duration
-                    talk_factor = 0.5 + 0.5 * math.sin(talk_counter * 0.3)
+                    
+                    # Create more natural talking motion with varying speeds
+                    if talk_counter % 10 < 3:
+                        # Quick opening
+                        talk_factor = 0.8 * math.sin(talk_counter * 0.5)
+                    elif talk_counter % 10 < 7:
+                        # Hold open
+                        talk_factor = 0.7 + 0.1 * math.sin(talk_counter * 0.2)
+                    else:
+                        # Quick closing
+                        talk_factor = 0.3 * math.sin(talk_counter * 0.4)
+                    
+                    # Add small random variations for natural movement
+                    talk_factor += random.uniform(-0.05, 0.05)
+                    talk_factor = max(0, min(1, talk_factor))  # Keep between 0 and 1
+                    
                     talk_counter -= 1
-                    if talk_counter <= 0 and random.random() < 0.7:  # 70% chance to stop talking
+                    if talk_counter <= 0 and random.random() < 0.7:
                         talking = False
                 
                 # Draw full character with animation

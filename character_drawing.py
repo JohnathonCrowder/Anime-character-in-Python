@@ -528,142 +528,138 @@ def draw_nose_mouth(offset_x=0, offset_y=0, talk_factor=0, emotion="neutral"):
     Moveto(309 + offset_x, 270 + offset_y)
     curveto_r(0, 0, 4, 7, 1, 9)
     
-    # Mouth - based on emotion and talk_factor
+    # Improved mouth animation
     if talk_factor > 0:
-        # Open mouth (talking)
-        pp.pensize(2)
-        # Calculate talk opening height
-        mouth_open = 4 + talk_factor * 6
-        
+        # Advanced talking mouth shapes
         if emotion == "happy":
-            # Happy talking mouth (curved smile with opening)
+            # Happy talking - wide smile variation
+            Moveto(291 + offset_x, 307 + offset_y)
             pp.begin_fill()
-            pp.color("black", "#660000")  # Dark interior color
             
-            # Upper lip curve
-            Moveto(295 + offset_x, 307 + offset_y)
-            curveto_r(5, 4, 20, 6, 32, 2)
+            # Upper lip with variable curve
+            curveto_r(10, 5 + talk_factor*3, 25, 8 + talk_factor*4, 38, 5 + talk_factor*3)
             
-            # Lower lip curve
-            lineto(0, mouth_open)
-            curveto_r(-5, 2, -25, 2, -32, 0)
+            # Right corner
+            curveto_r(2, 0, 3, -1 - talk_factor*2, 3, -3 - talk_factor*3)
             
-            lineto(0, -mouth_open)
+            # Lower lip
+            curveto_r(0, 2 + talk_factor*4, -15, 8 + talk_factor*6, -38, 8 + talk_factor*4)
+            
+            # Left corner
+            curveto_r(-3, -2 - talk_factor*2, -3, -4 - talk_factor*3, 0, -7 - talk_factor*3)
+            
             pp.end_fill()
-            
-            # Add lip line
-            pp.pencolor("black")
-            Moveto(295 + offset_x, 307 + offset_y)
-            curveto_r(5, 4, 20, 6, 32, 2)
-            Moveto(295 + offset_x, 307 + offset_y + mouth_open)
-            curveto_r(5, 2, 25, 2, 32, 0)
             
         elif emotion == "sad":
-            # Sad talking mouth (downturned with opening)
+            # Sad talking - downturned mouth
+            Moveto(293 + offset_x, 310 + offset_y)
             pp.begin_fill()
-            pp.color("black", "#660000")
             
-            # Upper lip curve (downturned)
-            Moveto(295 + offset_x, 310 + offset_y)
-            curveto_r(5, -3, 20, -4, 32, -1)
+            # Upper lip
+            curveto_r(10, -2 + talk_factor*2, 25, -4 + talk_factor*3, 35, -2 + talk_factor*2)
             
-            # Lower lip curve
-            lineto(0, mouth_open)
-            curveto_r(-5, 2, -25, 2, -32, 0)
+            # Right corner
+            curveto_r(2, 1, 2, 3 + talk_factor*2, 1, 4 + talk_factor*3)
             
-            lineto(0, -mouth_open)
+            # Lower lip
+            curveto_r(-5, 3 + talk_factor*4, -20, 6 + talk_factor*5, -35, 4 + talk_factor*3)
+            
+            # Left corner
+            curveto_r(-2, -1, -2, -3 - talk_factor*2, 0, -5 - talk_factor*3)
+            
             pp.end_fill()
-            
-            # Add lip line
-            pp.pencolor("black")
-            Moveto(295 + offset_x, 310 + offset_y)
-            curveto_r(5, -3, 20, -4, 32, -1)
-            Moveto(295 + offset_x, 310 + offset_y + mouth_open)
-            curveto_r(5, 1, 25, 1, 32, 0)
             
         elif emotion == "surprised":
-            # Surprised talking mouth (O shape, more open)
+            # Surprised talking - O shape that changes
+            center_x = 308 + offset_x
+            center_y = 308 + offset_y
+            
+            # Dynamic O shape
+            Moveto(center_x - 12, center_y)
             pp.begin_fill()
-            pp.color("black", "#660000")
             
-            mouth_open = 6 + talk_factor * 8  # More opening for surprise
-            mouth_width = 26 + talk_factor * 4
+            # Top curve
+            curveto_r(6, -6 - talk_factor*4, 18, -6 - talk_factor*4, 24, 0)
             
-            # Oval mouth
-            Moveto(296.5 + offset_x, 307.5 + offset_y)
-            pp.pencolor("#660000")
-            pp.setheading(0)
-            pp.penup()
+            # Right side
+            curveto_r(4, 4 + talk_factor*2, 4, 8 + talk_factor*4, 0, 12 + talk_factor*6)
             
-            # Upper half of oval
-            Moveto(310 + offset_x, 307.5 + offset_y - mouth_open/2)
-            pp.pendown()
-            pp.circle(mouth_open/2, 180, 20)
+            # Bottom curve
+            curveto_r(-6, 4 + talk_factor*2, -18, 4 + talk_factor*2, -24, 0)
             
-            # Lower half of oval
-            pp.setheading(180)
-            pp.circle(mouth_open/2, 180, 20)
+            # Left side
+            curveto_r(-4, -4 - talk_factor*2, -4, -8 - talk_factor*4, 0, -12 - talk_factor*6)
             
             pp.end_fill()
-            
-            # Outline the O
-            pp.pencolor("black")
-            pp.pensize(2)
-            Moveto(310 + offset_x, 307.5 + offset_y - mouth_open/2)
-            pp.pendown()
-            pp.setheading(0)
-            pp.circle(mouth_open/2, 360, 40)
-            pp.penup()
             
         else:
-            # Natural talking mouth (slight curve with dynamic opening)
+            # Natural talking mouth with better shape variation
+            Moveto(292 + offset_x, 307 + offset_y)
             pp.begin_fill()
-            pp.color("black", "#660000")
             
-            # Dynamic mouth dimensions
-            vertical_offset = talk_factor * 2
+            # Different mouth shapes based on talk_factor
+            if talk_factor < 0.3:
+                # Small opening
+                curveto_r(8, 1, 20, 2, 32, 1)
+                curveto_r(2, 1, 2, 2, 1, 3)
+                curveto_r(-10, 3, -22, 3, -32, 0)
+                curveto_r(-2, -1, -2, -2, -1, -3)
+                
+            elif talk_factor < 0.6:
+                # Medium opening
+                curveto_r(10, 2, 22, 4, 34, 2)
+                curveto_r(2, 2, 2, 4, 0, 6)
+                curveto_r(-12, 5, -24, 5, -34, 0)
+                curveto_r(-2, -2, -2, -4, 0, -6)
+                
+            else:
+                # Wide opening
+                curveto_r(12, 3, 24, 6, 36, 3)
+                curveto_r(2, 3, 2, 6, -1, 9)
+                curveto_r(-14, 6, -26, 6, -36, 0)
+                curveto_r(-2, -3, -2, -6, 1, -9)
             
-            # Upper lip curve
-            Moveto(296 + offset_x, 307.5 + offset_y - vertical_offset)
-            curveto_r(5, 2, 20, 3, 30, 0)
-            
-            # Lower lip curve
-            lineto(0, mouth_open)
-            curveto_r(-6, 1, -24, 1, -30, 0)
-            
-            lineto(0, -mouth_open)
             pp.end_fill()
             
-            # Add lip lines for definition
-            pp.pencolor("black")
-            Moveto(296 + offset_x, 307.5 + offset_y - vertical_offset)
-            curveto_r(5, 2, 20, 3, 30, 0)
-            Moveto(296 + offset_x, 307.5 + offset_y - vertical_offset + mouth_open)
-            curveto_r(5, 1, 24, 1, 30, 0)
-        
-        pp.pensize(1)
-        
+            # Add inner mouth detail for larger openings
+            if talk_factor > 0.5:
+                pp.color("#FF6B6B", "#FF6B6B")  # Tongue color
+                Moveto(298 + offset_x, 310 + offset_y + talk_factor*3)
+                pp.begin_fill()
+                curveto_r(5, 1, 12, 2, 18, 1)
+                curveto_r(3, 2, 2, 4, -1, 5)
+                curveto_r(-8, 1, -16, 0, -18, -2)
+                curveto_r(-2, -2, -1, -4, 1, -5)
+                pp.end_fill()
+                pp.color("black", "black")  # Reset color
     else:
-        # Closed mouth based on emotion
+        # Closed mouth expressions (unchanged)
         if emotion == "happy":
             # Happy smile
-            Moveto(296.5 + offset_x, 307.5 + offset_y)
-            curveto_r(6, 5, 20, 8, 30, 3)
+            Moveto(293 + offset_x, 307.5 + offset_y)
+            pp.begin_fill()
+            curveto_r(10, 6, 22, 9, 34, 4)
+            curveto_r(2, -1, 1, -3, 0, -3)
+            horizontal(-34)
+            pp.end_fill()
         elif emotion == "sad":
             # Sad frown
-            Moveto(296.5 + offset_x, 311.5 + offset_y)
-            curveto_r(6, -3, 20, -6, 30, -2)
+            Moveto(293 + offset_x, 311.5 + offset_y)
+            pp.begin_fill()
+            curveto_r(10, -4, 22, -6, 34, -3)
+            curveto_r(2, 1, 1, 2, 0, 2)
+            horizontal(-34)
+            pp.end_fill()
         elif emotion == "surprised":
             # Surprised small O
             pp.begin_fill()
-            pp.color("black", "#660000")
-            Moveto(296.5 + offset_x, 307.5 + offset_y)
-            curveto_r(5, 5, 20, 10, 30, 5)
-            smooth_r(8, -5, 0, -10)
-            horizontal(-30)
+            Moveto(302 + offset_x, 307.5 + offset_y)
+            curveto_r(5, -3, 10, -3, 15, 0)
+            curveto_r(3, 3, 3, 6, 0, 9)
+            curveto_r(-5, 3, -10, 3, -15, 0)
+            curveto_r(-3, -3, -3, -6, 0, -9)
             pp.end_fill()
         else:
             # Normal mouth
-            line(296.5 + offset_x, 307.5 + offset_y, 303.5 + offset_x, 307.5 + offset_y)
-            Moveto(315 + offset_x, 307 + offset_y)
-            smooth_r(10, -1, 10, 2)
+            Moveto(293 + offset_x, 307.5 + offset_y)
+            curveto_r(10, 0, 22, 1, 34, 0)
