@@ -1,5 +1,6 @@
 import turtle as pp
 import math
+import random
 from emotions import EYEBROW_SHAPES, MOUTH_SHAPES, get_emotion_data
 
 # Constants
@@ -279,7 +280,7 @@ def draw_collar(offset_y=0):
     Moveto(369, 333 + offset_y)
     curveto_r(2, 4, -6, 10, -15, 14)
 
-    #  Collar through bow tie parts
+    # Collar through bow tie parts
     pp.color("black", "#A2B8D6")
     Moveto(297, 387 + offset_y)
     pp.begin_fill()
@@ -394,15 +395,19 @@ def draw_eyebrows(offset_x=0, offset_y=0, emotion="neutral"):
 def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
     emotion_data = get_emotion_data(emotion)
     
-    # Adjust blink factor for sleepy emotion
+    # Adjust blink factor for sleepy emotions
     if emotion == "sleepy" and blink_factor < emotion_data.blink_adjust:
         blink_factor = emotion_data.blink_adjust
+    
+    # Special case for winking - force right eye closed
+    winking = emotion == "winking"
     
     # Eyes base
     pp.color("black", "#D1D1D1")
     pp.pensize(2)
     
     # Left eye - using emotion adjustments
+    left_blink = blink_factor
     Moveto(206 + offset_x, 212 + offset_y)
     pp.begin_fill()
     lineto(15 + emotion_data.eye_width_adjust, -7)
@@ -410,12 +415,14 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
     smooth_r(10, 3, 12, 7)
     pp.pencolor("#D1D1D1")
     pp.pensize(1)
-    smooth_r(2, 27 - 25*blink_factor + emotion_data.eye_height_adjust, -1, 30 - 28*blink_factor + emotion_data.eye_height_adjust)
+    smooth_r(2, 27 - 25*left_blink + emotion_data.eye_height_adjust, 
+             -1, 30 - 28*left_blink + emotion_data.eye_height_adjust)
     smooth_r(-39 - emotion_data.eye_width_adjust, 5, -44 - emotion_data.eye_width_adjust, 1)
     Smooth(206 + offset_x, 212 + offset_y, 206 + offset_x, 212 + offset_y)
     pp.end_fill()
     
-    # Right eye  
+    # Right eye - force closed if winking  
+    right_blink = 1.0 if winking else blink_factor
     Moveto(384 + offset_x, 204 + offset_y)
     pp.begin_fill()
     pp.pencolor("black")
@@ -424,7 +431,8 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
     smooth_r(-9, 6, -10, 9)
     pp.pencolor("#D1D1D1")
     pp.pensize(1)
-    smooth_r(3, 18 - 16*blink_factor + emotion_data.eye_height_adjust, 6, 23 - 21*blink_factor + emotion_data.eye_height_adjust)
+    smooth_r(3, 18 - 16*right_blink + emotion_data.eye_height_adjust, 
+             6, 23 - 21*right_blink + emotion_data.eye_height_adjust)
     smooth_r(38 + emotion_data.eye_width_adjust, 6, 40 + emotion_data.eye_width_adjust, 4)
     smooth_r(10, -9, 13, -22)
     pp.pencolor("black")
@@ -437,51 +445,71 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
         pp.color("#0C1631", "#0C1631")
         pp.pensize(1)
         
-        # Left iris
-        Moveto(216 + offset_x + emotion_data.iris_offset_x, 
-               206 + offset_y + emotion_data.iris_offset_y)
-        pp.begin_fill()
-        curveto_r(-1, 5, 0, 26 - 24*blink_factor, 7, 35 - 33*blink_factor)
-        smooth_r(30, 2, 33, 0)
-        smooth_r(5, -31 + 29*blink_factor, 2, -34 + 32*blink_factor)
-        Smooth(219 + offset_x + emotion_data.iris_offset_x, 
-               203 + offset_y + emotion_data.iris_offset_y, 
-               216 + offset_x + emotion_data.iris_offset_x, 
-               206 + offset_y + emotion_data.iris_offset_y)
-        pp.end_fill()
-        
-        # Right iris
-        Moveto(354 + offset_x + emotion_data.iris_offset_x, 
-               207 + offset_y + emotion_data.iris_offset_y)
-        pp.begin_fill()
-        curveto_r(-2, 1, 2, 29 - 27*blink_factor, 4, 31 - 29*blink_factor)
-        smooth_r(30, 3, 33, 1)
-        smooth_r(6, -24 + 22*blink_factor, 4, -27 + 25*blink_factor)
-        lineto(-11, -8)
-        Curveto(382 + offset_x + emotion_data.iris_offset_x, 
-                204 + offset_y + emotion_data.iris_offset_y, 
-                357 + offset_x + emotion_data.iris_offset_x, 
-                206 + offset_y + emotion_data.iris_offset_y, 
-                354 + offset_x + emotion_data.iris_offset_x, 
-                207 + offset_y + emotion_data.iris_offset_y)
-        pp.end_fill()
+        if winking and right_blink >= 0.8:
+            # Only draw left iris when winking
+            # Left iris
+            Moveto(216 + offset_x + emotion_data.iris_offset_x, 
+                   206 + offset_y + emotion_data.iris_offset_y)
+            pp.begin_fill()
+            curveto_r(-1, 5, 0, 26 - 24*left_blink, 7, 35 - 33*left_blink)
+            smooth_r(30, 2, 33, 0)
+            smooth_r(5, -31 + 29*left_blink, 2, -34 + 32*left_blink)
+            Smooth(219 + offset_x + emotion_data.iris_offset_x, 
+                   203 + offset_y + emotion_data.iris_offset_y, 
+                   216 + offset_x + emotion_data.iris_offset_x, 
+                   206 + offset_y + emotion_data.iris_offset_y)
+            pp.end_fill()
+        else:
+            # Draw both irises normally
+            # Left iris
+            Moveto(216 + offset_x + emotion_data.iris_offset_x, 
+                   206 + offset_y + emotion_data.iris_offset_y)
+            pp.begin_fill()
+            curveto_r(-1, 5, 0, 26 - 24*left_blink, 7, 35 - 33*left_blink)
+            smooth_r(30, 2, 33, 0)
+            smooth_r(5, -31 + 29*left_blink, 2, -34 + 32*left_blink)
+            Smooth(219 + offset_x + emotion_data.iris_offset_x, 
+                   203 + offset_y + emotion_data.iris_offset_y, 
+                   216 + offset_x + emotion_data.iris_offset_x, 
+                   206 + offset_y + emotion_data.iris_offset_y)
+            pp.end_fill()
+            
+            # Right iris
+            Moveto(354 + offset_x + emotion_data.iris_offset_x, 
+                   207 + offset_y + emotion_data.iris_offset_y)
+            pp.begin_fill()
+            curveto_r(-2, 1, 2, 29 - 27*right_blink, 4, 31 - 29*right_blink)
+            smooth_r(30, 3, 33, 1)
+            smooth_r(6, -24 + 22*right_blink, 4, -27 + 25*right_blink)
+            lineto(-11, -8)
+            Curveto(382 + offset_x + emotion_data.iris_offset_x, 
+                    204 + offset_y + emotion_data.iris_offset_y, 
+                    357 + offset_x + emotion_data.iris_offset_x, 
+                    206 + offset_y + emotion_data.iris_offset_y, 
+                    354 + offset_x + emotion_data.iris_offset_x, 
+                    207 + offset_y + emotion_data.iris_offset_y)
+            pp.end_fill()
     
     # Eye highlights
     if blink_factor < 0.6 and emotion != "sleepy":
         pp.color("#F5F5F5", "#F5F5F5")
-        Moveto(253 + offset_x, 211 + offset_y)
-        pp.begin_fill()
-        curveto_r(-3, 0, -8, 8 - 7*blink_factor, 1, 10 - 9*blink_factor)
-        Smooth(258 + offset_x, 210 + offset_y, 253 + offset_x, 211 + offset_y)
-        pp.end_fill()
+        # Left eye highlight
+        if left_blink < 0.6:
+            Moveto(253 + offset_x, 211 + offset_y)
+            pp.begin_fill()
+            curveto_r(-3, 0, -8, 8 - 7*left_blink, 1, 10 - 9*left_blink)
+            Smooth(258 + offset_x, 210 + offset_y, 253 + offset_x, 211 + offset_y)
+            pp.end_fill()
         
-        Moveto(392 + offset_x, 209 + offset_y)
-        pp.begin_fill()
-        lineto(4, 3)
-        vertical(4 - 3*blink_factor)
-        lineto(-4, 2)
-        Curveto(386 + offset_x, 214 + offset_y, 392 + offset_x, 209 + offset_y, 392 + offset_x, 209 + offset_y)
-        pp.end_fill()
+        # Right eye highlight - only if not winking
+        if right_blink < 0.6 and not winking:
+            Moveto(392 + offset_x, 209 + offset_y)
+            pp.begin_fill()
+            lineto(4, 3)
+            vertical(4 - 3*right_blink)
+            lineto(-4, 2)
+            Curveto(386 + offset_x, 214 + offset_y, 392 + offset_x, 209 + offset_y, 392 + offset_x, 209 + offset_y)
+            pp.end_fill()
     
     # Eye details (only when open)
     if blink_factor < 0.4 and emotion not in ["happy", "sleepy"]:
@@ -496,13 +524,15 @@ def draw_eyes(offset_x=0, offset_y=0, blink_factor=0, emotion="neutral"):
         line(246.5 + offset_x, 222.5 + offset_y, 232.5 + offset_x, 226.5 + offset_y)
         line(244.5 + offset_x, 225.5 + offset_y, 234.5 + offset_x, 228.5 + offset_y)
         
-        line(377.5 + offset_x, 207.5 + offset_y, 367.5 + offset_x, 210.5 + offset_y)
-        line(384.5 + offset_x, 207.5 + offset_y, 366.5 + offset_x, 212.5 + offset_y)
-        line(385.5 + offset_x, 210.5 + offset_y, 366.5 + offset_x, 215.5 + offset_y)
-        line(384.5 + offset_x, 213.5 + offset_y, 366.5 + offset_x, 218.5 + offset_y)
-        line(384.5 + offset_x, 215.5 + offset_y, 367.5 + offset_x, 220.5 + offset_y)
-        line(384.5 + offset_x, 218.5 + offset_y, 368.5 + offset_x, 223.5 + offset_y)
-        line(382.5 + offset_x, 223.5 + offset_y, 370.5 + offset_x,  227.5 + offset_y)
+        # Right eye details - only if not winking
+        if not winking and right_blink < 0.4:
+            line(377.5 + offset_x, 207.5 + offset_y, 367.5 + offset_x, 210.5 + offset_y)
+            line(384.5 + offset_x, 207.5 + offset_y, 366.5 + offset_x, 212.5 + offset_y)
+            line(385.5 + offset_x, 210.5 + offset_y, 366.5 + offset_x, 215.5 + offset_y)
+            line(384.5 + offset_x, 213.5 + offset_y, 366.5 + offset_x, 218.5 + offset_y)
+            line(384.5 + offset_x, 215.5 + offset_y, 367.5 + offset_x, 220.5 + offset_y)
+            line(384.5 + offset_x, 218.5 + offset_y, 368.5 + offset_x, 223.5 + offset_y)
+            line(382.5 + offset_x, 223.5 + offset_y, 370.5 + offset_x, 227.5 + offset_y)
 
 def draw_nose_mouth(offset_x=0, offset_y=0, talk_factor=0, emotion="neutral"):
     pp.pencolor("black")
@@ -604,7 +634,7 @@ def draw_nose_mouth(offset_x=0, offset_y=0, talk_factor=0, emotion="neutral"):
 # Special effects functions
 def draw_blush(offset_x=0, offset_y=0, intensity=1.0):
     # Draw blush marks for shy emotion
-    pp.color("#FFB7B7", "#FFB7B7")  # Light pink (removed the E0 transparency)
+    pp.color("#FFB7B7", "#FFB7B7")  # Light pink
     # Left cheek
     Moveto(230 + offset_x, 272 + offset_y)
     pp.begin_fill()
@@ -621,16 +651,14 @@ def draw_blush(offset_x=0, offset_y=0, intensity=1.0):
 
 def draw_sweat_drop(offset_x=0, offset_y=0):
     # Draw sweat drop for nervous/anxious emotions
-    pp.color("#A0D8FF", "#A0D8FF")  # Light blue (removed the E0 transparency)
+    pp.color("#A0D8FF", "#A0D8FF")  # Light blue
     Moveto(390 + offset_x, 180 + offset_y)
     pp.begin_fill()
     curveto_r(2, -5, 6, -10, 3, -15)
     curveto_r(-4, -2, -8, -1, -10, 5)
     curveto_r(1, 5, 5, 8, 7, 10)
     pp.end_fill()
-    pp.color("black", "#F3EEEB") 
-
-
+    pp.color("black", "#F3EEEB")  # Reset color
 
 def draw_vein_mark(offset_x=0, offset_y=0):
     # Draw vein mark for angry emotion
@@ -660,3 +688,30 @@ def draw_swirl_mark(offset_x=0, offset_y=0):
     pp.penup()
     pp.pencolor("black")
     pp.pensize(1)
+
+def draw_tears(offset_x=0, offset_y=0):
+    """Draw tears for crying emotion"""
+    pp.color("#A0D8FF", "#A0D8FF")  # Light blue
+    
+    # Draw multiple tears
+    tear_positions = [
+        (235, 240, 16),  # Left eye, x, y, length
+        (250, 250, 12),
+        (360, 245, 14),  # Right eye
+        (375, 255, 10),
+    ]
+    
+    for x, y, length in tear_positions:
+        Moveto(x + offset_x, y + offset_y)
+        pp.begin_fill()
+        # Teardrop shape
+        curveto_r(2, 2, 4, length-5, 0, length)
+        curveto_r(-4, 0, -6, -5, -4, -length)
+        pp.end_fill()
+    
+    pp.color("black", "#F3EEEB")  # Reset color
+
+def draw_wink(offset_x=0, offset_y=0):
+    """Draw wink effect (closed right eye)"""
+    # This is handled by the draw_eyes function with special logic
+    pass

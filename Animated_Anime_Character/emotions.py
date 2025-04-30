@@ -1,4 +1,4 @@
-import turtle
+import math
 
 class EmotionData:
     def __init__(self, name, eyebrow_type, eye_type, mouth_type, 
@@ -85,7 +85,55 @@ EYEBROW_SHAPES = {
         left_curve=[(5, 0, 63, 3, 63, 3)],
         right_start_y=195,
         right_curve=[(0, 0, 18, -2, 18, -2)]
-    )
+    ),
+    "shocked": EyebrowShape(
+        left_start_y=170,
+        left_curve=[(5, -8, 63, 5, 63, 10)],
+        right_start_y=182,
+        right_curve=[(0, -7, 18, -10, 18, -10)]
+    ),
+    "smug": EyebrowShape(
+        left_start_y=182,
+        left_curve=[(5, -2, 63, 12, 63, 16)],
+        right_start_y=188,
+        right_curve=[(0, 0, 18, -2, 18, -2)]
+    ),
+    "crying": EyebrowShape(
+        left_start_y=188,
+        left_curve=[(5, 3, 63, 13, 63, 20)],
+        right_start_y=200,
+        right_curve=[(0, 4, 18, -1, 18, -1)]
+    ),
+    "confused": EyebrowShape(
+        left_start_y=175,
+        left_curve=[(5, -5, 63, 7, 63, 12)],
+        right_start_y=195,
+        right_curve=[(0, 2, 18, -4, 18, -4)]
+    ),
+    "thinking": EyebrowShape(
+        left_start_y=180,
+        left_curve=[(5, -3, 63, 8, 63, 13)],
+        right_start_y=185,
+        right_curve=[(0, -8, 18, -5, 18, -5)]
+    ),
+    "bored": EyebrowShape(
+        left_start_y=185,
+        left_curve=[(5, 0, 63, 0, 63, 0)],
+        right_start_y=195,
+        right_curve=[(0, 0, 18, 0, 18, 0)]
+    ),
+    "winking": EyebrowShape(
+        left_start_y=180,
+        left_curve=[(5, -4, 63, 9, 63, 14)],
+        right_start_y=175,
+        right_curve=[(0, -6, 18, -8, 18, -8)]
+    ),
+    "laughing": EyebrowShape(
+        left_start_y=180,
+        left_curve=[(5, 0, 63, 10, 63, 15)],
+        right_start_y=193,
+        right_curve=[(0, 0, 18, -7, 18, -7)]
+    ),
 }
 
 # Mouth definitions
@@ -296,7 +344,215 @@ MOUTH_SHAPES = {
                 ("curveto_r", -1, 0, -1, -1, 0, -2)
             ]
         }
-    )
+    ),
+    "shocked": MouthShape(
+        closed_shape={
+            "start_x": 300,
+            "start_y": 305,
+            "curves": [
+                ("curveto_r", 6, -5, 12, -5, 18, 0),
+                ("curveto_r", 4, 5, 4, 10, 0, 15),
+                ("curveto_r", -6, 5, -12, 5, -18, 0),
+                ("curveto_r", -4, -5, -4, -10, 0, -15)
+            ]
+        },
+        talking_shape={
+            "start_x": 295,
+            "start_y": 305,
+            "upper_lip": [
+                ("curveto_r", 6, -6, 22, -6, 28, 0)
+            ],
+            "lower_lip": [
+                ("curveto_r", -8, 10, -20, 10, -28, 0)
+            ],
+            "corners": [
+                ("curveto_r", 4, 5, 4, 10, 0, 15),
+                ("curveto_r", -4, -5, -4, -10, 0, -15)
+            ]
+        }
+    ),
+    "smug": MouthShape(
+        closed_shape={
+            "start_x": 293,
+            "start_y": 307,
+            "curves": [
+                ("curveto_r", 8, 2, 16, 5, 34, 2),
+                ("curveto_r", 2, -1, 0, -2, 0, -2),
+                ("horizontal", -34)
+            ]
+        },
+        talking_shape={
+            "start_x": 293,
+            "start_y": 307,
+            "upper_lip": [
+                ("curveto_r", 8, 2, 16, 5, 34, 2)
+            ],
+            "lower_lip": [
+                ("curveto_r", -10, 3, -24, 3, -34, 0)
+            ],
+            "corners": [
+                ("curveto_r", 2, 0, 2, -1, 0, -2),
+                ("curveto_r", -2, 0, -2, 1, 0, 2)
+            ]
+        }
+    ),
+    "crying": MouthShape(
+        closed_shape={
+            "start_x": 293,
+            "start_y": 315,
+            "curves": [
+                ("curveto_r", 10, -6, 22, -8, 34, -5),
+                ("curveto_r", 2, 1, 1, 2, 0, 2),
+                ("horizontal", -34)
+            ]
+        },
+        talking_shape={
+            "start_x": 293,
+            "start_y": 315,
+            "upper_lip": [
+                ("curveto_r", 10, -4, 22, -6, 34, -3)
+            ],
+            "lower_lip": [
+                ("curveto_r", -10, -4, -22, -6, -34, -3)
+            ],
+            "corners": [
+                ("curveto_r", 2, 1, 1, 2, 0, 2),
+                ("curveto_r", -2, 1, -1, 2, 0, 2)
+            ]
+        }
+    ),
+    "confused": MouthShape(
+        closed_shape={
+            "start_x": 293,
+            "start_y": 309,
+            "curves": [
+                ("curveto_r", 5, -1, 15, 0, 25, -2),
+                ("curveto_r", 5, 1, 5, 2, 5, 3),
+                ("horizontal", -30)
+            ]
+        },
+        talking_shape={
+            "start_x": 293,
+            "start_y": 309,
+            "upper_lip": [
+                ("curveto_r", 5, -1, 15, 0, 25, -2)
+            ],
+            "lower_lip": [
+                ("curveto_r", -5, 3, -15, 4, -25, 2)
+            ],
+            "corners": [
+                ("curveto_r", 3, 0, 5, 1, 5, 3),
+                ("curveto_r", -3, 0, -5, -1, -5, -3)
+            ]
+        }
+    ),
+    "thinking": MouthShape(
+        closed_shape={
+            "start_x": 303,
+            "start_y": 309,
+            "curves": [
+                ("curveto_r", 0, 0, 10, 0, 15, 0),
+                ("curveto_r", 0, 0, 0, 0, 0, 0),
+                ("horizontal", -15)
+            ]
+        },
+        talking_shape={
+            "start_x": 303,
+            "start_y": 309,
+            "upper_lip": [
+                ("curveto_r", 0, 0, 10, 0, 15, 0)
+            ],
+            "lower_lip": [
+                ("curveto_r", -5, 2, -10, 2, -15, 0)
+            ],
+            "corners": [
+                ("curveto_r", 0, 0, 0, 0, 0, 0),
+                ("curveto_r", 0, 0, 0, 0, 0, 0)
+            ]
+        }
+    ),
+    "bored": MouthShape(
+        closed_shape={
+            "start_x": 295,
+            "start_y": 310,
+            "curves": [
+                ("curveto_r", 10, 0, 20, 0, 30, 0)
+            ]
+        },
+        talking_shape={
+            "start_x": 295,
+            "start_y": 310,
+            "upper_lip": [
+                ("curveto_r", 10, 0, 20, 0, 30, 0)
+            ],
+            "lower_lip": [
+                ("curveto_r", -10, 2, -20, 2, -30, 0)
+            ],
+            "corners": [
+                ("curveto_r", 0, 0, 0, 1, 0, 1),
+                ("curveto_r", 0, 0, 0, -1, 0, -1)
+            ]
+        }
+    ),
+    "winking": MouthShape(
+        closed_shape={
+            "start_x": 293,
+            "start_y": 307.5,
+            "curves": [
+                ("curveto_r", 6, 4, 16, 7, 28, 3),
+                ("curveto_r", 2, -1, 1, -2, 0, -2),
+                ("horizontal", -28)
+            ]
+        },
+        talking_shape={
+            "start_x": 293,
+            "start_y": 307.5,
+            "upper_lip": [
+                ("curveto_r", 6, 4, 16, 7, 28, 3)
+            ],
+            "lower_lip": [
+                ("curveto_r", -8, 3, -20, 3, -28, 0)
+            ],
+            "corners": [
+                ("curveto_r", 2, -1, 1, -2, 0, -2),
+                ("curveto_r", -2, 1, -1, 2, 0, 2)
+            ]
+        }
+    ),
+    "laughing": MouthShape(
+        closed_shape={
+            "start_x": 290,
+            "start_y": 306,
+            "curves": [
+                ("curveto_r", 12, 10, 28, 15, 40, 10),
+                ("curveto_r", 0, -5, -5, -10, -10, -12),
+                ("curveto_r", -10, 0, -20, 0, -30, 0)
+            ]
+        },
+        talking_shape={
+            "start_x": 290,
+            "start_y": 306,
+            "upper_lip": [
+                ("curveto_r", 12, 5, 28, 10, 40, 5)
+            ],
+            "lower_lip": [
+                ("curveto_r", -12, 10, -28, 10, -40, 0)
+            ],
+            "corners": [
+                ("curveto_r", 0, 0, 0, 0, 0, 0),
+                ("curveto_r", 0, 0, 0, 0, 0, 0)
+            ],
+            "inner_detail": {
+                "color": "#FF6B6B",
+                "curves": [
+                    ("curveto_r", 10, 1, 20, 2, 30, 1),
+                    ("curveto_r", 3, 2, 2, 4, -1, 5),
+                    ("curveto_r", -8, 1, -22, 0, -28, -2),
+                    ("curveto_r", -2, -2, -1, -4, 1, -5)
+                ]
+            }
+        }
+    ),
 }
 
 # Emotion definitions
@@ -371,7 +627,82 @@ EMOTIONS = {
         eye_width_adjust=-8,
         iris_offset_y=5,
         blink_adjust=0.5
-    )
+    ),
+    "shocked": EmotionData(
+        name="shocked",
+        eyebrow_type="shocked",
+        eye_type="surprised",
+        mouth_type="shocked",
+        eye_height_adjust=-15,
+        eye_width_adjust=12,
+        iris_offset_y=-6,
+        special_effects=["sweat_drop"]
+    ),
+    "smug": EmotionData(
+        name="smug",
+        eyebrow_type="smug",
+        eye_type="happy",
+        mouth_type="smug",
+        eye_height_adjust=7,
+        eye_width_adjust=-4,
+        iris_offset_x=3,
+        iris_offset_y=2
+    ),
+    "crying": EmotionData(
+        name="crying",
+        eyebrow_type="crying",
+        eye_type="sad",
+        mouth_type="crying",
+        eye_height_adjust=4,
+        iris_offset_y=5,
+        special_effects=["tears"]
+    ),
+    "confused": EmotionData(
+        name="confused",
+        eyebrow_type="confused",
+        eye_type="normal",
+        mouth_type="confused",
+        iris_offset_x=3,
+        iris_offset_y=-3,
+        special_effects=["swirl_mark"]
+    ),
+    "thinking": EmotionData(
+        name="thinking",
+        eyebrow_type="thinking",
+        eye_type="normal",
+        mouth_type="thinking",
+        eye_height_adjust=0,
+        iris_offset_x=0,
+        iris_offset_y=-8,
+    ),
+    "bored": EmotionData(
+        name="bored",
+        eyebrow_type="bored",
+        eye_type="sleepy",
+        mouth_type="bored",
+        eye_height_adjust=10,
+        eye_width_adjust=-5,
+        iris_offset_y=3,
+        blink_adjust=0.3
+    ),
+    "winking": EmotionData(
+        name="winking",
+        eyebrow_type="winking",
+        eye_type="happy",
+        mouth_type="winking",
+        eye_height_adjust=2,
+        iris_offset_y=1,
+        special_effects=["wink"]
+    ),
+    "laughing": EmotionData(
+        name="laughing",
+        eyebrow_type="laughing",
+        eye_type="happy",
+        mouth_type="laughing",
+        eye_height_adjust=15,  # Nearly closed from laughing
+        eye_width_adjust=5,
+        blink_adjust=0.7
+    ),
 }
 
 def get_emotion_data(emotion_name):
