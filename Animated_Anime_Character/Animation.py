@@ -9,8 +9,6 @@ from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPainterPath, QFont
 from emotions import get_emotion_data, get_available_emotions, EYEBROW_SHAPES, MOUTH_SHAPES
 from eye_drawing import EyeRenderer
 
-
-
 # Constants
 WIDTH = 600
 HEIGHT = 500
@@ -18,8 +16,8 @@ HEIGHT = 500
 class AnimationController:
     def __init__(self):
         self.frame = 0
-        self.blink_interval = random.randint(50, 150)
-        self.blink_duration = 10
+        self.blink_interval = random.randint(100, 300)  # More variable blink timing
+        self.blink_duration = 8  # Shorter, more natural blink
         self.breath_speed = 0.03
         self.head_move_speed = 0.02
         self.talk_counter = 0
@@ -30,7 +28,10 @@ class AnimationController:
         self.head_offset_y = 0
         self.blink_factor = 0
         self.talk_factor = 0
-        self.eye_renderer = EyeRenderer(self)
+        self.next_blink_type = 0  # 0=normal, 1=half, 2=long
+        self.blink_state = 0  # 0=open, 1=closing, 2=closed, 3=opening
+        self.blink_progress = 0
+        self.eye_moisture = 1.0  # Affects shine/tear film
         
     def update(self):
         self.frame += 1
@@ -42,16 +43,68 @@ class AnimationController:
         self.head_offset_x = 2 * math.sin(self.frame * self.head_move_speed)
         self.head_offset_y = 1 * math.sin(self.frame * self.head_move_speed * 0.7)
         
-        # Calculate blink animation
-        if self.frame % self.blink_interval < self.blink_duration:
-            self.blink_factor = math.sin((self.frame % self.blink_duration) * 
-                                       math.pi / self.blink_duration)
-        else:
-            self.blink_factor = 0
+        # Realistic blinking animation
+        if self.frame % self.blink_interval == 0 and self.blink_state == 0:
+            # Start a new blink
+            self.blink_state = 1
+            self.blink_progress = 0
             
-        # Adjust blink interval
-        if self.frame % self.blink_interval == 0:
-            self.blink_interval = random.randint(50, 150)
+            # Choose blink type
+            rand_val = random.random()
+            if rand_val < 0.7:  # 70% normal blink
+                self.next_blink_type = 0
+                self.blink_duration = random.randint(6, 9)
+            elif rand_val < 0.9:  # 20% half blink
+                self.next_blink_type = 1
+                self.blink_duration = random.randint(4, 6)
+            else:  # 10% long blink
+                self.next_blink_type = 2
+                self.blink_duration = random.randint(10, 15)
+            
+            # Vary the next blink interval
+            self.blink_interval = random.randint(100, 300)
+            
+            # Sometimes blink twice in quick succession
+            if random.random() < 0.2:
+                self.blink_interval = random.randint(10, 30)
+        
+        # Progress the blink animation
+        if self.blink_state == 1:  # Closing
+            self.blink_progress += 1
+            if self.blink_progress >= self.blink_duration * 0.4:
+                self.blink_state = 2
+                self.blink_progress = 0
+        elif self.blink_state == 2:  # Closed
+            self.blink_progress += 1
+            if self.blink_progress >= self.blink_duration * 0.2:
+                self.blink_state = 3
+                self.blink_progress = 0
+        elif self.blink_state == 3:  # Opening
+            self.blink_progress += 1
+            if self.blink_progress >= self.blink_duration * 0.4:
+                self.blink_state = 0
+                self.blink_progress = 0
+        
+        # Calculate blink factor with easing
+        if self.blink_state == 0:
+            self.blink_factor = 0
+        elif self.blink_state == 1:  # Closing - faster at start, slower at end
+            t = self.blink_progress / (self.blink_duration * 0.4)
+            self.blink_factor = self.ease_in_cubic(t)
+            if self.next_blink_type == 1:  # Half blink
+                self.blink_factor *= 0.6
+        elif self.blink_state == 2:  # Closed
+            self.blink_factor = 1 if self.next_blink_type != 1 else 0.6
+        elif self.blink_state == 3:  # Opening - slower at start, faster at end
+            t = self.blink_progress / (self.blink_duration * 0.4)
+            self.blink_factor = 1 - self.ease_out_cubic(t)
+            if self.next_blink_type == 1:  # Half blink
+                self.blink_factor *= 0.6
+        
+        # Eye moisture simulation (affects shine)
+        self.eye_moisture = 0.8 + 0.2 * math.sin(self.frame * 0.05)
+        if self.blink_state == 3 and self.blink_progress < 2:  # Just after opening
+            self.eye_moisture = min(1.0, self.eye_moisture + 0.2)
         
         # Calculate talk animation
         if self.talking:
@@ -73,6 +126,14 @@ class AnimationController:
                 self.talk_counter = 0
         else:
             self.talk_factor = 0
+    
+    def ease_in_cubic(self, t):
+        """Easing function for closing eyes"""
+        return t * t * t
+    
+    def ease_out_cubic(self, t):
+        """Easing function for opening eyes"""
+        return 1 - pow(1 - t, 3)
 
 class QtCharacterRenderer:
     def __init__(self, controller):
@@ -88,16 +149,15 @@ class QtCharacterRenderer:
     def convert_x(self, x):
         """Convert x from turtle coords to Qt coords"""
         return x
-        
+    
     def convert_y(self, y):
         """Convert y from turtle coords to Qt coords"""
-        # Fix: Invert Y coordinate to display right-side up
         return y
-        
+    
     def convert_point(self, x, y):
         """Convert point from turtle coords to Qt coords"""
         return QPointF(self.convert_x(x), self.convert_y(y))
-        
+    
     def moveto(self, path, x, y):
         """Move to position without drawing"""
         path.moveTo(self.convert_point(x, y))
@@ -105,26 +165,26 @@ class QtCharacterRenderer:
     def lineto(self, path, x, y):
         """Line to absolute position"""
         path.lineTo(self.convert_point(x, y))
-
+    
     def relative_lineto(self, path, dx, dy):
         """Line to relative position"""
         current = path.currentPosition()
-        path.lineTo(current + QPointF(dx, dy))  # Fixed: don't invert dy
-
+        path.lineTo(current + QPointF(dx, dy))
+    
     def horizontal(self, path, x):
         """Horizontal line to absolute x position"""
         current = path.currentPosition()
         path.lineTo(QPointF(self.convert_x(x), current.y()))
-
+    
     def vertical(self, path, dy):
         """Vertical line relative"""
         current = path.currentPosition()
-        path.lineTo(QPointF(current.x(), current.y() + dy))  # Fixed: don't invert dy
-
+        path.lineTo(QPointF(current.x(), current.y() + dy))
+    
     def curveto_r(self, path, dx1, dy1, dx2, dy2, dx, dy):
         """Add relative cubic bezier curve"""
         current = path.currentPosition()
-        ctrl1 = current + QPointF(dx1, dy1)  # Fixed: don't invert dy values
+        ctrl1 = current + QPointF(dx1, dy1)
         ctrl2 = current + QPointF(dx2, dy2)
         end = current + QPointF(dx, dy)
         
@@ -137,7 +197,7 @@ class QtCharacterRenderer:
         current = path.currentPosition()
         
         # First control point is reflection of previous second control point
-        ctrl1 = current + QPointF(self.Xh, self.Yh)  # Fixed: don't invert Yh
+        ctrl1 = current + QPointF(self.Xh, self.Yh)
         ctrl2 = current + QPointF(dx2, dy2)
         end = current + QPointF(dx, dy)
         
@@ -149,6 +209,19 @@ class QtCharacterRenderer:
         """Add absolute cubic bezier curve"""
         current = path.currentPosition()
         ctrl1 = self.convert_point(x1, y1)
+        ctrl2 = self.convert_point(x2, y2)
+        end = self.convert_point(x, y)
+        
+        path.cubicTo(ctrl1, ctrl2, end)
+        self.Xh = x - x2
+        self.Yh = y - y2
+    
+    def smooth(self, path, x2, y2, x, y):
+        """Add smooth absolute cubic bezier curve"""
+        current = path.currentPosition()
+        
+        # First control point is reflection of previous second control point
+        ctrl1 = QPointF(current.x() + self.Xh, current.y() - self.Yh)
         ctrl2 = self.convert_point(x2, y2)
         end = self.convert_point(x, y)
         
@@ -290,7 +363,7 @@ class QtCharacterRenderer:
         self.curveto_r(path, 45, 20, 64, 14, 94, 1)
         self.vertical(path, 2)
         self.curveto_r(path, 8, -2, 15, 2, 17, 4)
-        self.smooth_r(path,0, 6, -2, 9)
+        self.smooth_r(path, 0, 6, -2, 9)
         self.curveto_r(path, 10, 10, 10, 29, 11, 33)
         self.smooth_r(path, 23, 4, 25, 6)
         self.smooth_r(path, -17, 83, -17, 78)
@@ -483,42 +556,11 @@ class QtCharacterRenderer:
         self.lineto(path5, 349 + offset_x, 180 + offset_y)
         painter.drawPath(path5)
     
-    def draw_eyebrows(self, painter, offset_x, offset_y):
-        """Draw eyebrows with emotion adjustments"""
-        emotion = self.renderer.controller.emotion
-        painter.setPen(QPen(QColor("black"), 2))
-        
-        # Get emotion data for eyebrow adjustments
-        emotion_data = self.renderer.emotion_data if hasattr(self.renderer, 'emotion_data') else None
-        if not emotion_data:
-            from emotions import get_emotion_data, EYEBROW_SHAPES
-            emotion_data = get_emotion_data(emotion)
-        
-        eyebrow_shape = EYEBROW_SHAPES[emotion_data.eyebrow_type]
-        
-        # Left eyebrow with emotion
-        left_brow_path = QPainterPath()
-        self.renderer.moveto(left_brow_path, 210 + offset_x, eyebrow_shape.left_start_y + offset_y)
-        
-        for curve_params in eyebrow_shape.left_curve:
-            self.renderer.curveto_r(left_brow_path, *curve_params)
-        
-        painter.drawPath(left_brow_path)
-        
-        # Right eyebrow with emotion
-        right_brow_path = QPainterPath()
-        self.renderer.moveto(right_brow_path, 338 + offset_x, eyebrow_shape.right_start_y + offset_y)
-        
-        for curve_params in eyebrow_shape.right_curve:
-            self.renderer.curveto_r(right_brow_path, *curve_params)
-        
-        painter.drawPath(right_brow_path)
-        
     def draw_eyes(self, painter, offset_x=0, offset_y=0):
         """Draw the character's eyes using the EyeRenderer"""
         emotion_data = get_emotion_data(self.controller.emotion)
         self.eye_renderer.draw_eyes(painter, offset_x, offset_y, 
-                                self.controller.blink_factor, emotion_data)
+                                   self.controller.blink_factor, emotion_data)
     
     def draw_nose(self, painter, offset_x=0, offset_y=0):
         """Draw the character's nose"""
@@ -713,19 +755,6 @@ class QtCharacterRenderer:
             path.lineTo(start.x() + x, start.y() - y)
         
         painter.drawPath(path)
-
-    def smooth(self, path, x2, y2, x, y):
-        """Add smooth absolute cubic bezier curve"""
-        current = path.currentPosition()
-        
-        # First control point is reflection of previous second control point
-        ctrl1 = QPointF(current.x() + self.Xh, current.y() + self.Yh)  # Note: not inverted
-        ctrl2 = self.convert_point(x2, y2)
-        end = self.convert_point(x, y)
-        
-        path.cubicTo(ctrl1, ctrl2, end)
-        self.Xh = x - x2
-        self.Yh = y - y2
     
     def draw_tears(self, painter, offset_x=0, offset_y=0):
         """Draw tears for crying emotion"""
@@ -777,7 +806,7 @@ class QtCharacterRenderer:
         self.draw_face(painter, offset_x, offset_y)
         self.draw_hair(painter, offset_x, offset_y)
         
-        # Remove this line to avoid double eyebrows:
+        # IMPORTANT: Remove this line to avoid double eyebrows
         # self.draw_eyebrows(painter, offset_x, offset_y)
         
         self.draw_eyes(painter, offset_x, offset_y)
@@ -934,7 +963,7 @@ class AnimeAvatarApp(QMainWindow):
     
     def adjust_blink_frequency(self, value):
         """Adjust blink frequency"""
-        self.controller.blink_interval = 200 - (value * 18)
+        self.controller.blink_interval = 300 - (value * 25)  # Adjusted for more realistic range
     
     def adjust_breath_speed(self, value):
         """Adjust breathing speed"""
