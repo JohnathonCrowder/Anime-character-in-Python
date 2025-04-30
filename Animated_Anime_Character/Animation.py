@@ -8,6 +8,10 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, QPointF
 from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPainterPath, QFont
 from emotions import get_emotion_data, get_available_emotions, EYEBROW_SHAPES, MOUTH_SHAPES
 from eye_drawing import EyeRenderer
+from mouth_drawing import MouthRenderer
+
+import warnings
+warnings.filterwarnings("ignore", message=".*sipPyTypeDict.*", category=DeprecationWarning)
 
 # Constants
 WIDTH = 600
@@ -145,6 +149,7 @@ class QtCharacterRenderer:
         self.Xh = 0  # For Smooth curves
         self.Yh = 0  # For Smooth curves
         self.eye_renderer = EyeRenderer(self)
+        self.mouth_renderer = MouthRenderer(self)
         
     def convert_x(self, x):
         """Convert x from turtle coords to Qt coords"""
@@ -562,120 +567,10 @@ class QtCharacterRenderer:
         self.eye_renderer.draw_eyes(painter, offset_x, offset_y, 
                                    self.controller.blink_factor, emotion_data)
     
-    def draw_nose(self, painter, offset_x=0, offset_y=0):
-        """Draw the character's nose"""
-        painter.setPen(QPen(QColor("black"), 1))
-        
-        nose_path = QPainterPath()
-        self.moveto(nose_path, 309 + offset_x, 270 + offset_y)
-        self.Xh = self.Yh = 0
-        
-        self.curveto_r(nose_path, 0, 0, 4, 7, 1, 9)
-        painter.drawPath(nose_path)
-    
-    def draw_mouth(self, painter, offset_x=0, offset_y=0):
-        """Draw the mouth with talk animation"""
+    def draw_nose_and_mouth(self, painter, offset_x=0, offset_y=0):
+        """Draw the nose and mouth using the MouthRenderer"""
         emotion_data = get_emotion_data(self.controller.emotion)
-        mouth_shape = MOUTH_SHAPES[emotion_data.mouth_type]
-        
-        painter.setPen(QPen(QColor("black"), 1))
-        
-        if self.controller.talk_factor > 0:
-            # Talking mouth
-            talking_data = mouth_shape.talking
-            path = QPainterPath()
-            self.moveto(path, talking_data.start_x + offset_x, 
-                       talking_data.start_y + offset_y)
-            self.Xh = self.Yh = 0
-            
-            painter.setBrush(QBrush(QColor("black")))
-            
-            # Draw upper lip with animation
-            for curve_type, *params in talking_data.upper_lip:
-                if curve_type == "curveto_r":
-                    adjusted_params = []
-                    for i, param in enumerate(params):
-                        if i % 2 == 1:  # Y coordinates
-                            adjusted_params.append(param + (self.controller.talk_factor * 4))
-                        else:
-                            adjusted_params.append(param)
-                    self.curveto_r(path, *adjusted_params)
-            
-            # Draw right corner
-            if talking_data.corners and len(talking_data.corners) > 0:
-                corner_type, *corner_params = talking_data.corners[0]
-                if corner_type == "curveto_r":
-                    adjusted_params = []
-                    for i, param in enumerate(corner_params):
-                        if i % 2 == 1 and i > 2:  # Y coordinates after first pair
-                            adjusted_params.append(param + (self.controller.talk_factor * 4))
-                        else:
-                            adjusted_params.append(param)
-                    self.curveto_r(path, *adjusted_params)
-            
-            # Draw lower lip
-            for curve_type, *params in talking_data.lower_lip:
-                if curve_type == "curveto_r":
-                    adjusted_params = []
-                    for i, param in enumerate(params):
-                        if i % 2 == 1:  # Y coordinates
-                            adjusted_params.append(param + (self.controller.talk_factor * 6))
-                        else:
-                            adjusted_params.append(param)
-                    self.curveto_r(path, *adjusted_params)
-            
-            # Draw left corner
-            if talking_data.corners and len(talking_data.corners) > 1:
-                corner_type, *corner_params = talking_data.corners[1]
-                if corner_type == "curveto_r":
-                    adjusted_params = []
-                    for i, param in enumerate(corner_params):
-                        if i % 2 == 1 and i > 2:  # Y coordinates after first pair
-                            adjusted_params.append(param + (self.controller.talk_factor * 4))
-                        else:
-                            adjusted_params.append(param)
-                    self.curveto_r(path, *adjusted_params)
-            
-            path.closeSubpath()
-            painter.drawPath(path)
-            
-            # Draw inner detail if available
-            if talking_data.inner_detail and self.controller.talk_factor > 0.5:
-                painter.setBrush(QBrush(QColor(talking_data.inner_detail["color"])))
-                inner_path = QPainterPath()
-                self.moveto(inner_path, 298 + offset_x,
-                           310 + offset_y + self.controller.talk_factor*3)
-                self.Xh = self.Yh = 0
-                
-                for curve_type, *params in talking_data.inner_detail["curves"]:
-                    if curve_type == "curveto_r":
-                        self.curveto_r(inner_path, *params)
-                
-                inner_path.closeSubpath()
-                painter.drawPath(inner_path)
-                painter.setBrush(Qt.BrushStyle.NoBrush)
-        else:
-            # Closed mouth
-            closed_data = mouth_shape.closed
-            path = QPainterPath()
-            self.moveto(path, closed_data.start_x + offset_x, 
-                       closed_data.start_y + offset_y)
-            self.Xh = self.Yh = 0
-            
-            if len(closed_data.curves) > 1:
-                painter.setBrush(QBrush(QColor("black")))
-            
-            for curve_type, *params in closed_data.curves:
-                if curve_type == "curveto_r":
-                    self.curveto_r(path, *params)
-                elif curve_type == "horizontal":
-                    self.horizontal(path, self.convert_x(path.currentPosition().x()) + params[0])
-            
-            if len(closed_data.curves) > 1:
-                path.closeSubpath()
-            
-            painter.drawPath(path)
-            painter.setBrush(Qt.BrushStyle.NoBrush)
+        self.mouth_renderer.draw_nose_and_mouth(painter, offset_x, offset_y, emotion_data)
     
     def draw_special_effects(self, painter, offset_x=0, offset_y=0):
         """Draw special effects based on emotion"""
@@ -810,8 +705,7 @@ class QtCharacterRenderer:
         # self.draw_eyebrows(painter, offset_x, offset_y)
         
         self.draw_eyes(painter, offset_x, offset_y)
-        self.draw_nose(painter, offset_x, offset_y)
-        self.draw_mouth(painter, offset_x, offset_y)
+        self.draw_nose_and_mouth(painter, offset_x, offset_y)
         
         # Special effects
         self.draw_special_effects(painter, offset_x, offset_y)
