@@ -1181,5 +1181,5 @@ smooth_r(10, -1, 10, 2)
 
 pp.penup()
 pp.hideturtle()
-pp.updapp()
+pp.update()
 pp.done()
