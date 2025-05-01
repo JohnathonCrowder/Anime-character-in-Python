@@ -238,77 +238,6 @@ class QtCharacterRenderer:
         self.Xh = x - x2
         self.Yh = y - y2
     
-    def draw_coat(self, painter, offset_y=0):
-        """Draw the character's coat"""
-        painter.setPen(QPen(QColor("black"), 1))
-        painter.setBrush(QBrush(QColor("#F2F2F2")))
-        
-        path = QPainterPath()
-        self.moveto(path, 61, 462 + offset_y)
-        self.Xh = self.Yh = 0
-        
-        # Coat outline
-        self.smooth_r(path, 12, -41, 27, -58)
-        self.curveto_r(path, -6, -36, 6, -118, 9, -132)
-        self.curveto_r(path, -15, -27, -23, -51, -26, -74)
-        self.curveto_r(path, 4, -66, 38, -105, 65, -149)
-        self.horizontal(path, 486)
-        self.curveto_r(path, 12, 24, 40, 99, 33, 114)
-        self.curveto_r(path, 39, 82, 55, 129, 39, 144)
-        self.smooth_r(path, -31, 23, -39, 28)
-        self.smooth_r(path, -12, 37, -12, 37)
-        self.relative_lineto(path, 50, 92)
-        self.horizontal(path, 445)
-        self.smooth_r(path, -29, -38, -31, -46)
-        self.smooth_r(path, 78, -107, 72, -119)
-        self.curveto(path, 355, 178, 340, 176, 340, 176)
-        self.curveto(path, 272, 63, 264, 64, 264, 64)
-        self.smooth_r(path, -29, 67, -27, 73)
-        self.curveto(path, 99, 292, 174, 428, 173, 439)
-        self.smooth_r(path, -8, 23, -8, 23)
-        self.lineto(path, 61, 462 + offset_y)
-        
-        painter.drawPath(path)
-        
-        # Coat shadow
-        shadow_path = QPainterPath()
-        self.moveto(shadow_path, 60.5, 461.5 + offset_y)
-        self.Xh = self.Yh = 0
-        painter.setBrush(QBrush(QColor("#D3DFF0")))
-        
-        self.curveto_r(shadow_path, 0, 0, 17, -42, 27, -59)
-        self.curveto_r(shadow_path, -6, -33, 6, -128, 10, -133)
-        self.curveto_r(shadow_path, -15, -10, -27, -66, -27.285, -75)
-        
-        painter.setPen(QPen(QColor("#D3DFF0"), 1))
-        self.curveto_r(shadow_path, 12.285, 11, 82.963, 156, 82.963, 156)
-        painter.setPen(QPen(QColor("black"), 1))
-        
-        self.smooth_r(shadow_path, 12.322, 75, 19.322, 86)
-        self.curveto_r(shadow_path, -1, 11, -8, 25, -8, 25)
-        self.horizontal(shadow_path, 60.5)
-        
-        painter.drawPath(shadow_path)
-        
-        # More coat parts
-        more_path = QPainterPath()
-        self.moveto(more_path, 444.5, 464 + offset_y)
-        self.Xh = self.Yh = 0
-        
-        self.curveto_r(more_path, 0, 0, -29, -36, -31, -46)
-        self.smooth_r(more_path, 53.59, -82.337, 53.59, -82.337)
-        
-        painter.setPen(QPen(QColor("#D3DFF0"), 1))
-        self.smooth_r(more_path, 86.41, -47.663, 96.072, -54.85)
-        self.curveto(more_path, 563.5, 297.5, 570.5, 299.5, 518.5, 334)
-        
-        painter.setPen(QPen(QColor("black"), 1))
-        self.curveto_r(more_path, -2, 16, -12, 33, -12, 37)
-        self.smooth_r(more_path, 50, 92, 50, 93)
-        self.horizontal(more_path, 444.5)
-        
-        painter.drawPath(more_path)
-        
     def draw_jacket_inside(self, painter, offset_y=0):
         """Draw the inside of the jacket"""
         painter.setPen(QPen(QColor("black"), 1))
@@ -317,7 +246,7 @@ class QtCharacterRenderer:
         # Left side
         path = QPainterPath()
         self.moveto(path, 225, 462 + offset_y)
-        self.Xh = self.Yh = 0
+        self.Xh = self.Yh = 0  # Reset for smooth curves
         
         self.horizontal(path, 165)
         self.smooth_r(path, 9, -15, 8, -25)
@@ -329,7 +258,7 @@ class QtCharacterRenderer:
         # Right side
         right_path = QPainterPath()
         self.moveto(right_path, 390, 462 + offset_y)
-        self.Xh = self.Yh = 0
+        self.Xh = self.Yh = 0  # Reset for smooth curves
         
         self.curveto_r(right_path, 10, -23, 34, -180, 35, -222)
         self.curveto_r(right_path, 7, 4, 54, 45, 61, 61)
@@ -509,62 +438,6 @@ class QtCharacterRenderer:
         
         painter.drawPath(path)
     
-    def draw_hair(self, painter, offset_x=0, offset_y=0):
-        """Draw the character's hair"""
-        painter.setPen(QPen(QColor("black"), 1))
-        painter.setBrush(QBrush(QColor("#2B1D29")))
-        
-        # First part
-        path1 = QPainterPath()
-        self.moveto(path1, 189 + offset_x, 202 + offset_y)
-        self.Xh = self.Yh = 0
-        self.curveto_r(path1, -1, 22, 19, 51, 19, 51)
-        self.smooth_r(path1, -10, -42, 7, -92)
-        self.curveto(path1, 212 + offset_x, 168 + offset_y, 196 + offset_x, 189 + offset_y, 189 + offset_x, 202 + offset_y)
-        painter.drawPath(path1)
-        
-        # Second part
-        path2 = QPainterPath()
-        self.moveto(path2, 221 + offset_x, 155 + offset_y)
-        self.Xh = self.Yh = 0
-        self.curveto_r(path2, -2, 6, 5, 48, 5, 48)
-        self.smooth_r(path2, 18, -28, 20, -48)
-        self.curveto_r(path2, -5, 24, 4, 43, 7, 50)
-        self.curveto_r(path2, -10, -49, 3, -72, 13, -106)
-        self.curveto_r(path2, -2, -7, -3, -32, -3, -35)
-        self.curveto_r(path2, -17, 18, -27, 71, -27, 71)
-        self.lineto(path2, 221 + offset_x, 155 + offset_y)
-        painter.drawPath(path2)
-        
-        # Third part
-        path3 = QPainterPath()
-        self.moveto(path3, 264 + offset_x, 64 + offset_y)
-        self.Xh = self.Yh = 0
-        self.curveto_r(path3, -4, 5, 14, 100, 14, 100)
-        self.smooth_r(path3, -6, -79, -5, -85)
-        self.curveto_r(path3, 0, 98, 49, 139, 49, 139)
-        self.smooth_r(path3, 8, -50, 3, -65)
-        self.curveto(path3, 272 + offset_x, 64 + offset_y, 264 + offset_x, 64 + offset_y, 264 + offset_x, 64 + offset_y)
-        painter.drawPath(path3)
-        
-        # Fourth part
-        path4 = QPainterPath()
-        self.moveto(path4, 342 + offset_x, 176 + offset_y)
-        self.Xh = self.Yh = 0
-        self.curveto_r(path4, -1, 27, -10, 57, -10, 57)
-        self.smooth_r(path4, 20, -33, 17, -54)
-        self.lineto(path4, 342 + offset_x, 176 + offset_y)
-        painter.drawPath(path4)
-        
-        # Fifth part (polyline)
-        path5 = QPainterPath()
-        self.moveto(path5, 349 + offset_x, 180 + offset_y)
-        self.lineto(path5, 353 + offset_x, 203 + offset_y)
-        self.lineto(path5, 361 + offset_x, 203 + offset_y)
-        self.lineto(path5, 362 + offset_x, 188 + offset_y)
-        self.lineto(path5, 349 + offset_x, 180 + offset_y)
-        painter.drawPath(path5)
-    
     def draw_eyes(self, painter, offset_x=0, offset_y=0):
         """Draw the character's eyes using the EyeRenderer"""
         emotion_data = get_emotion_data(self.controller.emotion)
@@ -678,9 +551,39 @@ class QtCharacterRenderer:
             path.closeSubpath()
             
             painter.drawPath(path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     def draw(self, painter):
-        """Main drawing function"""
+        """Main drawing function with drawing order adjusted to keep hair behind clothes"""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Draw animated background first
@@ -688,12 +591,7 @@ class QtCharacterRenderer:
         self.bg_renderer.draw_background(painter)
         
         # Calculate the ground level (matching the foreground hills)
-        # The hills start at 0.75 of the height, so that's where the ground is
         ground_level = self.height * 0.75
-        
-        # The character's bottom (coat bottom) is at y=462 in its coordinate system
-        # To make this align with ground_level, we need to position the origin at:
-        # ground_level - 462
         character_y_position = ground_level - 462 + 200
         
         # Position character to stand on the ground
@@ -703,23 +601,135 @@ class QtCharacterRenderer:
         offset_x = self.controller.head_offset_x
         offset_y = self.controller.head_offset_y + self.controller.breath_offset
         
-        # Body parts (not affected by head movement)
-        self.draw_coat(painter, self.controller.breath_offset)
-        self.draw_jacket_inside(painter, self.controller.breath_offset)
+        # IMPORTANT: Draw hair FIRST so it's behind everything else
+        self.draw_hair(painter, offset_x, offset_y)
+        
+        # Now draw the body elements (which will appear in front of the hair)
+        #self.draw_jacket_inside(painter, self.controller.breath_offset)
         self.draw_clothes(painter, self.controller.breath_offset)
         self.draw_neck(painter, self.controller.breath_offset)
         self.draw_collar(painter, self.controller.breath_offset)
         self.draw_tie(painter, self.controller.breath_offset)
         
-        # Face parts (affected by head movement)
+        # Face and facial features (in front of everything)
         self.draw_face(painter, offset_x, offset_y)
-        self.draw_hair(painter, offset_x, offset_y)
-        
         self.draw_eyes(painter, offset_x, offset_y)
         self.draw_nose_and_mouth(painter, offset_x, offset_y)
         
         # Special effects
         self.draw_special_effects(painter, offset_x, offset_y)
+    
+
+    def draw_hair(self, painter, offset_x=0, offset_y=0):
+        """
+        Draw a simple arch-shaped hair with vertical sides.
+        This version avoids blocking clothing by having the hair behind the clothes.
+        """
+        # ============== EASILY ADJUSTABLE HAIR PARAMETERS ==============
+        # Edit these values to customize the hair shape
+        HAIR_PARAMS = {
+            # Center point of the face/hair (approximately at nose)
+            "center_x": 309,
+            
+            # How wide the entire hair shape should be
+            "total_width": 300,
+            
+            # How high the hair extends above the face
+            "height": 265,
+            
+            # Y position where hair meets the face (top of face)
+            "face_join_y": 212,
+            
+            # Y position for the bottom of the hair (below face)
+            "bottom_y": 600,
+            
+            # How curved the top arch is (higher = flatter arch, lower = more rounded)
+            "arch_flatness": 0.01,  # 0.0 to 1.0
+            
+            # Color of the hair
+            "color": "#2B1D29"
+        }
+        # ==============================================================
+        
+        # Apply the parameters
+        painter.setPen(QPen(QColor("black"), 1))
+        painter.setBrush(QBrush(QColor(HAIR_PARAMS["color"])))
+        
+        # Calculate positions based on parameters
+        face_center_x = HAIR_PARAMS["center_x"]
+        hair_width = HAIR_PARAMS["total_width"]
+        hair_left_x = face_center_x - (hair_width / 2)
+        hair_right_x = face_center_x + (hair_width / 2)
+        
+        # Calculate arch control points
+        # Flatness adjusts how rounded vs flat the arch is
+        arch_height = HAIR_PARAMS["height"]
+        flatness = HAIR_PARAMS["arch_flatness"]
+        
+        # Control points for the arch
+        cp1_x = hair_left_x + hair_width * 0.25 * flatness
+        cp1_y = HAIR_PARAMS["face_join_y"] - arch_height * (1.0 - flatness * 0.5)
+        
+        cp2_x = hair_right_x - hair_width * 0.25 * flatness
+        cp2_y = HAIR_PARAMS["face_join_y"] - arch_height * (1.0 - flatness * 0.5)
+        
+        # Single unified hair shape
+        hair_path = QPainterPath()
+        
+        # Start at bottom left corner
+        self.moveto(hair_path, hair_left_x + offset_x, HAIR_PARAMS["bottom_y"] + offset_y)
+        
+        # Straight up to left side of face
+        self.lineto(hair_path, hair_left_x + offset_x, HAIR_PARAMS["face_join_y"] + offset_y)
+        
+        # Arch across the top
+        self.curveto(hair_path, 
+                    cp1_x + offset_x, cp1_y + offset_y,
+                    cp2_x + offset_x, cp2_y + offset_y,
+                    hair_right_x + offset_x, HAIR_PARAMS["face_join_y"] + offset_y)
+        
+        # Straight down right side
+        self.lineto(hair_path, hair_right_x + offset_x, HAIR_PARAMS["bottom_y"] + offset_y)
+        
+        # Straight line across bottom to close
+        self.lineto(hair_path, hair_left_x + offset_x, HAIR_PARAMS["bottom_y"] + offset_y)
+        
+        painter.drawPath(hair_path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class CharacterView(QGraphicsView):
     def __init__(self, controller, parent=None):
